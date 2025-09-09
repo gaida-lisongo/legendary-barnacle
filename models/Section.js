@@ -186,12 +186,10 @@ const sectionSchema = new mongoose.Schema({
         }],
         motChef: {
             photo: {
-                type: String,
-                required: true
+                type: String
             },
             description: {
-                type: String,
-                required: true
+                type: String
             }
         }
     },
@@ -217,8 +215,7 @@ const sectionSchema = new mongoose.Schema({
         },
         email: {
             type: String,
-            required: true,
-            match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email invalide']
+            required: true
         },
         www: {
             type: String
