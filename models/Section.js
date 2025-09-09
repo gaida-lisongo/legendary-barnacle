@@ -183,7 +183,17 @@ const sectionSchema = new mongoose.Schema({
         },
         images: [{
             type: String
-        }]
+        }],
+        motChef: {
+            photo: {
+                type: String,
+                required: true
+            },
+            description: {
+                type: String,
+                required: true
+            }
+        }
     },
     offres: [offreSchema],
     calendrier: [calendrierSchema],
