@@ -1,0 +1,70 @@
+section = {
+    _id: Object('string'),
+    description:{
+        sigle: string,
+        designation:string,
+        devise: string,
+        objectif: string,
+        images: [string]
+    },
+    offres:[{
+        icon: string,
+        titre: string,
+        description: string
+    }],
+    calendrier:[{
+        annee: string,
+        cureent: bool,
+        activities:[{
+            titre: string,
+            date_activity: date,
+            desicription: string
+        }]
+    }],
+    alumin:[{
+        photo: string,
+        nom: string,
+        titre:string,
+        description: string
+    }],
+    galery:[{
+        annee: string,
+        cureent: bool,
+        events:[{
+            photo: string,
+            titre: date,
+            desicription: string
+        }]
+    }],
+    agenda:[{
+        annee: string,
+        cureent: bool,
+        events:[{
+            date_event: string,
+            titre: date,
+            desicription: string
+        }]
+    }],
+    missions:[{
+        titre: string,
+        description: string
+    }],
+    history:[{
+        date_event: date,
+        titre: string,
+        description: string
+    }],
+    team:[{
+        photo: string,
+        nom: string,
+        grade: string,
+        fonction: string
+    }],
+    valeurs:[string],
+    contact:{
+        addresse: string,
+        telephone: string,
+        email: string,
+        www: string
+    }
+}
