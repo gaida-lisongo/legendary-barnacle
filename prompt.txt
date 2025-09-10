@@ -68,3 +68,21 @@ section = {
         www: string
     }
 }
+
+Deposit = {
+    _id: Object(string),
+    userId: Object(string),
+    montant: number,
+    orderNumber: string,
+    reference: string,
+    statu: 'NO' | 'PENDING' | 'OK'
+}
+
+Withdraw = {
+    _id: Object(string),
+    userId: Object(string),
+    montant: number,
+    orderNumber: string,
+    reference: string,
+    statu: 'NO' | 'PENDING' | 'OK'
+}
