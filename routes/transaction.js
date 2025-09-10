@@ -1,8 +1,56 @@
 const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
+const flexPayManager = require('../service/MoneyManager');
+
+const formatPhoneNumber = (number) => {
+    //Recupère les 9 derniers chiffres
+    const cleaned = ('' + number).replace(/\D/g, '');
+    const match = cleaned.match(/(\d{9})$/);
+    if (match) {
+        return '243' + match[1];
+    }
+    return null;
+}
 
 // ============= ROUTES DEPOSITS =============
+router.post('/payment', async (req, res) => {
+    try {
+        const { amount, phoneNumber, reference, currency } = req.body;
+        const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
+        const result = await flexPayManager.createTransaction({ amount, phone: formattedPhoneNumber, reference, currency });
+
+        console.log('Payment result:', result);
+        if (!result) {
+            return res.status(500).json({
+                success: false,
+                message: 'Erreur lors du traitement du paiement'
+            });
+        }
+
+        res.status(result.code == "0" ? 200 : 400).json(result);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors du traitement du paiement',
+            error: error.message
+        });
+    }
+});
+
+router.get('/payment/:orderNumber', async (req, res) => {
+    try {
+        const { orderNumber } = req.params;
+        const result = await flexPayManager.checkTransaction({ orderNumber });
+        res.status(result.code == "0" ? 200 : 400).json(result);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la vérification du paiement',
+            error: error.message
+        });
+    }
+});
 
 // Créer un nouveau dépôt
 // POST /api/v1/transaction/deposit
