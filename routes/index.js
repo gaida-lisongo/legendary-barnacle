@@ -4,9 +4,17 @@ const router = express.Router();
 // Importer les routes de section
 const sectionRoutes = require('./section');
 const transactionRoutes = require('./transaction');
+const anneeRoutes = require('./annee');
+const enseignementRoutes = require('./enseignement');
+const etudiantRoutes = require('./etudiant');
+const venteRoutes = require('./vente');
 
 // Utiliser les routes de section sous le path /section
 router.use('/section', sectionRoutes);
 router.use('/transaction', transactionRoutes);
+router.use('/annee', anneeRoutes);
+router.use('/enseignement', enseignementRoutes);
+router.use('/etudiant', etudiantRoutes);
+router.use('/vente', venteRoutes);
 
 module.exports = router;
