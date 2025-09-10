@@ -86,3 +86,135 @@ Withdraw = {
     reference: string,
     statu: 'NO' | 'PENDING' | 'OK'
 }
+
+Commande = {
+    _id: Object(string),
+    productId: Object(string),
+    statu: 'NO' | 'PENDING' | 'OK'
+    reference: string,
+    anneeId: Object(string)
+}
+
+Produit = {
+    _id: Object(string),
+    benefice: [string],
+    designation: string,
+    image: string,
+    montant: number,
+    caracteristiques: [string],
+    sectionId: Object(string),
+    anneeId: Object(string),
+    categorie: [string],
+    avantages: [string]
+}
+
+Annee = {
+    debut: number,
+    fin: number,
+    motDg: {
+        photo: string,
+        description: string
+    }
+}
+
+Etudiant = {
+    _id: Object(string),
+    nom: string,
+    post_nom: string,
+    prenom: string,
+    sexe: string,
+    nationalite: string,
+    lieu_naissance: string,
+    date_naissance: date,
+    matricule: string,
+    secure: string,
+    solde: number,
+    documents: [string],
+    photo: string,
+    semestres: [{
+        semestreId: Object(string),
+        anneeId: ObjectId(string)
+    }]
+}
+
+Cycle = {
+    _id: Object(string),
+    designation: string,
+    description: string,
+    systeme: string,
+    classes: [{
+        designation: string,
+        description: string,
+        semestres: [Object(string)]
+    }]
+}
+
+Semestre = {
+    _id: Object(string),
+    designation: string,
+    description: string,
+    unites: [Object(string)],
+    insription: [{
+        anneeId: Object(string),
+        produitId: Object(string)
+    }]
+}
+
+Unite = {
+    _id: Object(string),
+    semestreId: Object(string),
+    responsable: [{
+        titulaireId: Object(string),
+        anneeId: Object(string)
+    }],
+    descripteur: {
+        mention: string,
+        code: string,
+        designation: string,
+        credit: number,
+        type: "Obigatoire" | "Optionnelle",
+        prealables: [string],
+        objectif: [string],
+        competences: [string],
+        approches: [string],
+        evaluation: [string],
+    },
+    ressources: [string],
+    bibliographie: [string],
+    videographie: [string],
+    cours: [Object(string)]
+}
+
+Cours = {
+    _id: Object(string),
+    titre: string,
+    description: string,
+    enseignement: [string],
+    credit: number,
+    contenu: [string],
+    repartition: [string],
+    plan : [{
+        anneeId: Object(string),
+        contenu: [string]
+    }],
+    seances: [{
+        anneeId: Object(string),
+        produitId: Object(string),
+        status: "NO" | "PENDING" | "OK"
+    }],
+    travaux: [{
+        anneeId: Object(string),
+        produitId: Object(string),
+        status: "NO" | "PENDING" | "OK"
+    }],
+    ressources: [string],
+    penalites: [string],
+    plagiat: [string]
+}
+
+Session = {
+    _id: Object(string),
+    anneeId: Object(string),
+    cours: [Object(string)],
+    produitId: Object(string)
+}
