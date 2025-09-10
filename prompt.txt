@@ -218,3 +218,39 @@ Session = {
     cours: [Object(string)],
     produitId: Object(string)
 }
+
+Agent = {
+    _id: Object(string),
+    nom: string,
+    post_nom: string,
+    prenom: string,
+    sexe: string,
+    nationalite: string,
+    lieu_naissance: string,
+    date_naissance: date,
+    matricule: string,
+    secure: string,
+    solde: number,
+    documents: [string],
+    photo: string
+}
+
+Charge = {
+    _id: Object(string),
+    agentId: Object(string),
+    coursId: Object(string),
+    anneeId: Object(string),
+}
+
+Fiche = {
+    _id: Object(string),
+    commandeId: Object(string),
+    cmi: number,
+    examen: number,
+    rattrapage: number,
+    author: Object(string),
+    logs: [{
+        agentId: Object(string),
+        justification: string
+    }]
+}
