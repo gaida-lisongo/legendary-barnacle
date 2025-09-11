@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const transactionController = require('../controllers/transactionController');
 const flexPayManager = require('../service/MoneyManager');
 
@@ -12,6 +13,8 @@ const formatPhoneNumber = (number) => {
     }
     return null;
 }
+
+router.use(auth);
 
 // ============= ROUTES DEPOSITS =============
 router.post('/payment', async (req, res) => {

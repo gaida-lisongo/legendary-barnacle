@@ -1,4 +1,6 @@
 const Agent = require('../models/Agent');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 exports.createAgent = async (req, res) => {
   try {
@@ -44,6 +46,27 @@ exports.deleteAgent = async (req, res) => {
     const agent = await Agent.findByIdAndDelete(req.params.id);
     if (!agent) return res.status(404).json({ error: 'Not found' });
     res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Authentification de l'agent
+exports.loginAgent = async (req, res) => {
+  const { matricule, password } = req.body;
+  if (!matricule || !password) {
+    return res.status(400).json({ error: 'Matricule et mot de passe requis.' });
+  }
+  try {
+    // Cryptage SHA1 du mot de passe
+    const hash = crypto.createHash('sha1').update(password).digest('hex');
+    const agent = await Agent.findOne({ matricule, secure: hash });
+    if (!agent) {
+      return res.status(401).json({ error: 'Identifiants invalides.' });
+    }
+    // Génération du token
+    const token = jwt.sign({ id: agent._id, matricule: agent.matricule }, 'SECRET_KEY', { expiresIn: '1d' });
+    res.json({ token, agent });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
