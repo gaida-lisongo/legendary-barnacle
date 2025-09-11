@@ -183,7 +183,15 @@ const sectionSchema = new mongoose.Schema({
         },
         images: [{
             type: String
-        }]
+        }],
+        motChef: {
+            photo: {
+                type: String
+            },
+            description: {
+                type: String
+            }
+        }
     },
     offres: [offreSchema],
     calendrier: [calendrierSchema],
@@ -207,8 +215,7 @@ const sectionSchema = new mongoose.Schema({
         },
         email: {
             type: String,
-            required: true,
-            match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email invalide']
+            required: true
         },
         www: {
             type: String
