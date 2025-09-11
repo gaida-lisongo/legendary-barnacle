@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 // Middleware pour sécuriser les routes
 module.exports = function (req, res, next) {
   const authHeader = req.headers['authorization'];
+  console.log("Current Auth Header:", authHeader);
+  
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
     return res.status(401).json({ error: 'Token manquant.' });
