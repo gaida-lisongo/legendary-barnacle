@@ -4,7 +4,6 @@ const auth = require('../middleware/auth');
 const etudiantController = require('../controllers/etudiantController');
 
 // Etudiant routes
-router.use(auth);
 router.post('/etudiant', etudiantController.createEtudiant);
 router.get('/etudiant', etudiantController.getEtudiants);
 router.get('/etudiant/:id', etudiantController.getEtudiant);
