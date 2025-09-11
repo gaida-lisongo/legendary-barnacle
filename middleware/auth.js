@@ -6,6 +6,7 @@ module.exports = function (req, res, next) {
   console.log("Current Auth Header:", authHeader);
   
   const token = authHeader && authHeader.split(' ')[1];
+  console.log("Token:",token);
   if (!token) {
     return res.status(401).json({ error: 'Token manquant.' });
   }
