@@ -17,6 +17,6 @@ router.use('/annee', anneeRoutes);
 router.use('/enseignement', enseignementRoutes);
 router.use('/etudiant', etudiantRoutes);
 router.use('/vente', venteRoutes);
-router.use('/agent', agentRoutes);
+router.use('/user', agentRoutes);
 
 module.exports = router;
