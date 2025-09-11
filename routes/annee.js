@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const sessionController = require('../controllers/sessionController');
 const anneeController = require('../controllers/anneeController');
 
 // Session routes
+router.use(auth);
 router.post('/session', sessionController.createSession);
 router.get('/session', sessionController.getSessions);
 router.get('/session/:id', sessionController.getSession);

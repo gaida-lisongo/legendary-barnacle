@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const commandeController = require('../controllers/commandeController');
 const produitController = require('../controllers/produitController');
 
 // Commande routes
+router.use(auth);
 router.post('/commande', commandeController.createCommande);
 router.get('/commande', commandeController.getCommandes);
 router.get('/commande/:id', commandeController.getCommande);

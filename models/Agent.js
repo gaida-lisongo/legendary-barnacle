@@ -13,7 +13,10 @@ const AgentSchema = new mongoose.Schema({
   solde: Number,
   grade: String,
   titre: String,
-  photo: String
+  photo: String,
+  telephone: { type: String, required: false },
+  email: { type: String, required: false },
+  adresse: { type: String, required: false }
 });
 
 module.exports = mongoose.model('Agent', AgentSchema);

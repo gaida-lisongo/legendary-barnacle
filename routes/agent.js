@@ -3,13 +3,20 @@ const router = express.Router();
 const agentController = require('../controllers/agentController');
 const chargeController = require('../controllers/chargeController');
 const ficheController = require('../controllers/ficheController');
+const auth = require('../middleware/auth');
 
 // Agent routes
 router.post('/agent', agentController.createAgent);
+router.post('/agent/login', agentController.loginAgent);
+// Middleware pour sécuriser les routes agent (sauf login et création)
+router.use('/agent', auth);
 router.get('/agent', agentController.getAgents);
 router.get('/agent/:id', agentController.getAgent);
 router.put('/agent/:id', agentController.updateAgent);
 router.delete('/agent/:id', agentController.deleteAgent);
+
+// Route d'authentification
+router.post('/agent/login', agentController.loginAgent);
 
 // Charge routes
 router.post('/charge', chargeController.createCharge);

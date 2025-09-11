@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const sectionController = require('../controllers/sectionController');
 
 // Créer une nouvelle section
 // POST /api/sections
+router.use(auth);
 router.post('/', async (req, res) => {
     try {
         const result = await sectionController.createSection(req.body);

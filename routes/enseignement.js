@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const coursController = require('../controllers/coursController');
 const uniteController = require('../controllers/uniteController');
 const semestreController = require('../controllers/semestreController');
 const cycleController = require('../controllers/cycleController');
 
 // Cours routes
+router.use(auth);
 router.post('/cours', coursController.createCours);
 router.get('/cours', coursController.getCoursList);
 router.get('/cours/:id', coursController.getCours);
