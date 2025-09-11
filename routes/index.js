@@ -8,6 +8,7 @@ const anneeRoutes = require('./annee');
 const enseignementRoutes = require('./enseignement');
 const etudiantRoutes = require('./etudiant');
 const venteRoutes = require('./vente');
+const agentRoutes = require('./agent');
 
 // Utiliser les routes de section sous le path /section
 router.use('/section', sectionRoutes);
@@ -16,5 +17,6 @@ router.use('/annee', anneeRoutes);
 router.use('/enseignement', enseignementRoutes);
 router.use('/etudiant', etudiantRoutes);
 router.use('/vente', venteRoutes);
+router.use('/user', agentRoutes);
 
 module.exports = router;
