@@ -15,9 +15,6 @@ router.get('/agent/:id', agentController.getAgent);
 router.put('/agent/:id', agentController.updateAgent);
 router.delete('/agent/:id', agentController.deleteAgent);
 
-// Route d'authentification
-router.post('/agent/login', agentController.loginAgent);
-
 // Charge routes
 router.post('/charge', chargeController.createCharge);
 router.get('/charge', chargeController.getCharges);
