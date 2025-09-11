@@ -11,10 +11,10 @@ router.put('/session/:id', sessionController.updateSession);
 router.delete('/session/:id', sessionController.deleteSession);
 
 // Annee routes
-router.post('/annee', anneeController.createAnnee);
-router.get('/annee', anneeController.getAnnees);
-router.get('/annee/:id', anneeController.getAnnee);
-router.put('/annee/:id', anneeController.updateAnnee);
-router.delete('/annee/:id', anneeController.deleteAnnee);
+router.post('/', anneeController.createAnnee);
+router.get('/', anneeController.getAnnees);
+router.get('/:id', anneeController.getAnnee);
+router.put('/:id', anneeController.updateAnnee);
+router.delete('/:id', anneeController.deleteAnnee);
 
 module.exports = router;
