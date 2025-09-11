@@ -12,6 +12,8 @@ module.exports = function (req, res, next) {
   }
   try {
     const decoded = jwt.verify(token, 'SECRET_KEY');
+    console.log("User Decoded :", decoded);
+    
     req.agent = decoded;
     next();
   } catch (err) {
