@@ -254,3 +254,9 @@ Fiche = {
         justification: string
     }]
 }
+
+Admin = {
+    userId: Object(string),
+    role: string,
+    quotite: number
+}
