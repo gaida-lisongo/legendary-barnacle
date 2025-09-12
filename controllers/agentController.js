@@ -42,6 +42,27 @@ exports.updateAgent = async (req, res) => {
   }
 };
 
+// Créditer le solde d'un agent
+exports.creditSolde = async (req, res) => {
+  try {
+    const { montant } = req.body;
+    if (montant === undefined) {
+      return res.status(400).json({ error: 'Le champ montant est requis.' });
+    }
+    const value = Number(montant);
+    if (isNaN(value) || value <= 0) {
+      return res.status(400).json({ error: 'Montant invalide (doit être > 0).' });
+    }
+    const agent = await Agent.findById(req.params.id);
+    if (!agent) return res.status(404).json({ error: 'Agent introuvable.' });
+    agent.solde = (agent.solde || 0) + value;
+    await agent.save();
+    res.json({ message: 'Solde crédité avec succès', solde: agent.solde, agent });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.deleteAgent = async (req, res) => {
   try {
     const agent = await Agent.findByIdAndDelete(req.params.id);

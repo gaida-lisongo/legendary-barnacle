@@ -14,6 +14,7 @@ router.get('/agent', agentController.getAgents);
 router.get('/agent/:id', agentController.getAgent);
 router.put('/agent/:id', agentController.updateAgent);
 router.delete('/agent/:id', agentController.deleteAgent);
+router.post('/agent/:id/credit', agentController.creditSolde);
 
 // Charge routes
 router.post('/charge', chargeController.createCharge);
