@@ -29,6 +29,15 @@ const withdrawSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    phoneNumber: {
+        type: String,
+        required: false,
+    },
+    description: {
+        type: String,
+        required: false,
+        trim: true
+    },
     status: {
         type: String,
         enum: {
