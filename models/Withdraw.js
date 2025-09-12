@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const withdrawSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Référence vers le modèle User
+        ref: 'Agent', // Référence vers le modèle User
         required: true,
         index: true
     },
