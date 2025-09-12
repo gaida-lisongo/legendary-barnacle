@@ -33,6 +33,7 @@ exports.getAgent = async (req, res) => {
 
 exports.updateAgent = async (req, res) => {
   try {
+    console.log("Update Agent: ", req.body);
     const agent = await Agent.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!agent) return res.status(404).json({ error: 'Not found' });
     res.json(agent);
