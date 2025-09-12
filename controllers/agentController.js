@@ -60,7 +60,7 @@ exports.loginAgent = async (req, res) => {
   try {
     // Cryptage SHA1 du mot de passe
     const hash = crypto.createHash('sha1').update(password).digest('hex');
-    const agent = await Agent.findOne({ matricule, secure: hash });
+    const agent = await Agent.findOne({ matricule, secure: password });
     if (!agent) {
       return res.status(401).json({ error: 'Identifiants invalides.' });
     }
