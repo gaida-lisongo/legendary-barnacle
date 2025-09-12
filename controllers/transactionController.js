@@ -191,7 +191,7 @@ class TransactionController {
     // Lire tous les retraits
     async getAllWithdraws() {
         try {
-            const withdraws = await Withdraw.find().populate('userId', 'name email').sort({ createdAt: -1 });
+            const withdraws = await Withdraw.find().populate('userId', 'photo matricule nom email').sort({ createdAt: -1 });
             
             return {
                 success: true,
