@@ -59,6 +59,8 @@ exports.loginAgent = async (req, res) => {
   }
   try {
     // Cryptage SHA1 du mot de passe
+    console.log("Secure uncrypte: ", password);
+    
     const hash = crypto.createHash('sha1').update(password).digest('hex');
     const agent = await Agent.findOne({ matricule, secure: password });
     if (!agent) {
