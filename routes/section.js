@@ -5,16 +5,34 @@ const sectionController = require('../controllers/sectionController');
 
 // Créer une nouvelle section
 // POST /api/sections
-router.use(auth);
-router.post('/', async (req, res) => {
+
+// Lire une section par ID
+// GET /api/sections/:id
+router.get('/:id', async (req, res) => {
     try {
-        const result = await sectionController.createSection(req.body);
-        const statusCode = result.success ? 201 : (result.message.includes('existe déjà') ? 400 : 500);
+        const result = await sectionController.getSectionById(req.params.id);
+        const statusCode = result.success ? 200 : (result.message === 'Section non trouvée' ? 404 : 500);
         res.status(statusCode).json(result);
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Erreur serveur lors de la création',
+            message: 'Erreur serveur lors de la récupération',
+            error: error.message
+        });
+    }
+});
+
+// Lire une section par nom (sigle ou designation)
+// GET /api/sections/name/:name
+router.get('/name/:name', async (req, res) => {
+    try {
+        const result = await sectionController.getSectionByName(req.params.name);
+        const statusCode = result.success ? 200 : (result.message.includes('non trouvée') ? 404 : 500);
+        res.status(statusCode).json(result);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la recherche par nom',
             error: error.message
         });
     }
@@ -57,38 +75,21 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// Lire une section par ID
-// GET /api/sections/:id
-router.get('/:id', async (req, res) => {
+
+router.use(auth);
+router.post('/', async (req, res) => {
     try {
-        const result = await sectionController.getSectionById(req.params.id);
-        const statusCode = result.success ? 200 : (result.message === 'Section non trouvée' ? 404 : 500);
+        const result = await sectionController.createSection(req.body);
+        const statusCode = result.success ? 201 : (result.message.includes('existe déjà') ? 400 : 500);
         res.status(statusCode).json(result);
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Erreur serveur lors de la récupération',
+            message: 'Erreur serveur lors de la création',
             error: error.message
         });
     }
 });
-
-// Lire une section par nom (sigle ou designation)
-// GET /api/sections/name/:name
-router.get('/name/:name', async (req, res) => {
-    try {
-        const result = await sectionController.getSectionByName(req.params.name);
-        const statusCode = result.success ? 200 : (result.message.includes('non trouvée') ? 404 : 500);
-        res.status(statusCode).json(result);
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Erreur serveur lors de la recherche par nom',
-            error: error.message
-        });
-    }
-});
-
 // Modifier une section
 // PUT /api/sections/:id
 router.put('/:id', async (req, res) => {
