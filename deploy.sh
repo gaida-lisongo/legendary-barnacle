@@ -12,7 +12,7 @@ LOG_FILE="$(dirname "$0")/deploy.log"
 declare -A projects
 # projects["/var/www/site"]="main:site-section"
 # projects["/var/www/backend"]="backend:backend-section"
-projects["/var/www/admin"]="admin:admin-section"
+projects["/root/section-app/admin"]="admin:admin-section"
 
 echo "🔄 Déploiement global démarré à $(date)" | tee -a "$LOG_FILE"
 
