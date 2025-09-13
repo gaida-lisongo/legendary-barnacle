@@ -5,11 +5,10 @@ const etudiantController = require('../controllers/etudiantController');
 
 router.get('/', etudiantController.getEtudiants);
 router.get('/:id', etudiantController.getEtudiant);
-
+router.post('/', etudiantController.createEtudiant);
 
 // Etudiant routes
 router.use(auth);
-router.post('/', etudiantController.createEtudiant);
 router.put('/:id', etudiantController.updateEtudiant);
 router.delete('/:id', etudiantController.deleteEtudiant);
 
