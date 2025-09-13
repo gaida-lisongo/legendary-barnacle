@@ -12,11 +12,11 @@ router.get('/charge', chargeController.getCharges);
 router.get('/charge/:id', chargeController.getCharge);
 router.get('/fiche', ficheController.getFiches);
 router.get('/fiche/:id', ficheController.getFiche);
+router.post('/agent/login', agentController.loginAgent);
 
 // Middleware pour sécuriser les routes agent (sauf login et création)
 router.use('/agent', auth);
 router.post('/agent', agentController.createAgent);
-router.post('/agent/login', agentController.loginAgent);
 router.put('/agent/:id', agentController.updateAgent);
 router.delete('/agent/:id', agentController.deleteAgent);
 router.post('/agent/:id/credit', agentController.creditSolde);
