@@ -89,8 +89,8 @@ app.post('/webhook', verifySignature, (req, res) => {
       console.error(`⚠️ stderr: ${stderr}`);
     });
   }
-
-  res.json({ success: true, message: 'Webhook reçu' });
+  console.log('✅ Webhook traité avec succès');
+  res.json({ success: true, message: 'Webhook reçu', data: payload });
 });
 
 //////////////////////////////////////////////////////////////
