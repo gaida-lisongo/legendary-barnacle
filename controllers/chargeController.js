@@ -49,6 +49,16 @@ exports.getChargesByCours = async (req, res) => {
   }
 };
 
+exports.getChargesByAnnee = async (req, res) => {
+  try {
+    const anneeId = req.params.anneeId;
+    const charges = await Charge.find({ anneeId });
+    res.json(charges);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.updateCharge = async (req, res) => {
   try {
     const charge = await Charge.findByIdAndUpdate(req.params.id, req.body, { new: true });

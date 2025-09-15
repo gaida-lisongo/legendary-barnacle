@@ -21,6 +21,7 @@ router.get('/charge', chargeController.getCharges);
 router.get('/charge/:id', chargeController.getCharge);
 router.get('/charge/agent/:enseignantId', chargeController.getChargesByEnseignant);
 router.get('/charge/cours/:coursId', chargeController.getChargesByCours);
+router.get('/charge/annee/:anneeId', chargeController.getChargesByAnnee);
 
 router.use(auth);
 
