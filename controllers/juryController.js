@@ -79,7 +79,8 @@ exports.getJuries = async (req, res) => {
 exports.getJuriesByAnneeAndSection = async (req, res) => {
   try {
     const { anneeId, sectionId } = req.params;
-    const juries = await Jury.find({ anneeId, sectionId });
+    console.log("Fetching juries for anneeId:", anneeId, "and sectionId:", sectionId);
+    const juries = await Jury.find({ anneId: anneeId, sectionId });
     res.json(juries);
   } catch (err) {
     res.status(500).json({ error: err.message });
