@@ -29,6 +29,27 @@ exports.getProduit = async (req, res) => {
   }
 };
 
+exports.getProduitsByCategorie = async (req, res) => {
+  try {
+    const { categorie } = req.params;
+    const produits = await Produit.find({ categorie }).populate('anneeId sectionId');
+    res.json(produits);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getProduitByAnneeAndSection = async (req, res) => {
+  try {
+    const { anneeId, sectionId } = req.params;
+    const produit = await Produit.findOne({ anneeId, sectionId });
+    if (!produit) return res.status(404).json({ error: 'Not found' });
+    res.json(produit);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.updateProduit = async (req, res) => {
   try {
     const produit = await Produit.findByIdAndUpdate(req.params.id, req.body, { new: true });

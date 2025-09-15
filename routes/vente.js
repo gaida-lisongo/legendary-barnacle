@@ -9,6 +9,8 @@ router.get('/commande', commandeController.getCommandes);
 router.get('/commande/:id', commandeController.getCommande);
 router.get('/produit', produitController.getProduits);
 router.get('/produit/:id', produitController.getProduit);
+router.get('/produit/categorie/:categorie', produitController.getProduitsByCategorie);
+router.get('/produit/annee/:anneeId/section/:sectionId', produitController.getProduitByAnneeAndSection);
 
 
 router.use(auth);
