@@ -29,6 +29,26 @@ exports.getCharge = async (req, res) => {
   }
 };
 
+exports.getChargesByEnseignant = async (req, res) => {
+  try {
+    const agentId = req.params.enseignantId;
+    const charges = await Charge.find({ agentId });
+    res.json(charges);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getChargesByCours = async (req, res) => {
+  try {
+    const coursId = req.params.coursId;
+    const charges = await Charge.find({ coursId });
+    res.json(charges);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.updateCharge = async (req, res) => {
   try {
     const charge = await Charge.findByIdAndUpdate(req.params.id, req.body, { new: true });

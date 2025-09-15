@@ -19,6 +19,8 @@ router.get('/cycle/:id', cycleController.getCycle);
 router.get('/cycle/section/:sectionId', cycleController.getCyclesBySection);
 router.get('/charge', chargeController.getCharges);
 router.get('/charge/:id', chargeController.getCharge);
+router.get('/charge/agent/:enseignantId', chargeController.getChargesByEnseignant);
+router.get('/charge/cours/:coursId', chargeController.getChargesByCours);
 
 router.use(auth);
 
