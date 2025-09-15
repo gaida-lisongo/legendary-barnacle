@@ -12,7 +12,7 @@ exports.createCharge = async (req, res) => {
 
 exports.getCharges = async (req, res) => {
   try {
-    const charges = await Charge.find();
+    const charges = await Charge.find().populate('agentId coursId anneeId');
     res.json(charges);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -21,7 +21,7 @@ exports.getCharges = async (req, res) => {
 
 exports.getCharge = async (req, res) => {
   try {
-    const charge = await Charge.findById(req.params.id);
+    const charge = await Charge.findById(req.params.id).populate('agentId coursId anneeId');
     if (!charge) return res.status(404).json({ error: 'Not found' });
     res.json(charge);
   } catch (err) {
@@ -32,7 +32,8 @@ exports.getCharge = async (req, res) => {
 exports.getChargesByEnseignant = async (req, res) => {
   try {
     const agentId = req.params.enseignantId;
-    const charges = await Charge.find({ agentId });
+    //Make Populate for agentId and coursId
+    const charges = await Charge.find({ agentId }).populate('agentId coursId');
     res.json(charges);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -42,7 +43,7 @@ exports.getChargesByEnseignant = async (req, res) => {
 exports.getChargesByCours = async (req, res) => {
   try {
     const coursId = req.params.coursId;
-    const charges = await Charge.find({ coursId });
+    const charges = await Charge.find({ coursId }).populate('agentId coursId anneeId');
     res.json(charges);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -52,7 +53,7 @@ exports.getChargesByCours = async (req, res) => {
 exports.getChargesByAnnee = async (req, res) => {
   try {
     const anneeId = req.params.anneeId;
-    const charges = await Charge.find({ anneeId });
+    const charges = await Charge.find({ anneeId }).populate('agentId coursId anneeId');
     res.json(charges);
   } catch (err) {
     res.status(500).json({ error: err.message });
