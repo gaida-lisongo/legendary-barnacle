@@ -5,6 +5,7 @@ const coursController = require('../controllers/coursController');
 const uniteController = require('../controllers/uniteController');
 const semestreController = require('../controllers/semestreController');
 const cycleController = require('../controllers/cycleController');
+const chargeController = require('../controllers/chargeController');
 
 // Cours routes
 router.get('/cours', coursController.getCoursList);
@@ -16,9 +17,17 @@ router.get('/semestre/:id', semestreController.getSemestre);
 router.get('/cycle', cycleController.getCycles);
 router.get('/cycle/:id', cycleController.getCycle);
 router.get('/cycle/section/:sectionId', cycleController.getCyclesBySection);
-
+router.get('/charge', chargeController.getCharges);
+router.get('/charge/:id', chargeController.getCharge);
 
 router.use(auth);
+
+// Charge routes
+router.post('/charge', chargeController.createCharge);
+router.put('/charge/:id', chargeController.updateCharge);
+router.delete('/charge/:id', chargeController.deleteCharge);
+
+// Cours routes
 router.post('/cours', coursController.createCours);
 router.put('/cours/:id', coursController.updateCours);
 router.delete('/cours/:id', coursController.deleteCours);
