@@ -29,6 +29,16 @@ exports.getCycle = async (req, res) => {
   }
 };
 
+exports.getCyclesBySection = async (req, res) => {
+  try {
+    const sectionId = req.params.sectionId;
+    const cycles = await Cycle.find({ sectionId });
+    res.json(cycles);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 exports.updateCycle = async (req, res) => {
   try {
     const cycle = await Cycle.findByIdAndUpdate(req.params.id, req.body, { new: true });

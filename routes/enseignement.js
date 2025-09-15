@@ -15,6 +15,7 @@ router.get('/semestre', semestreController.getSemestres);
 router.get('/semestre/:id', semestreController.getSemestre);
 router.get('/cycle', cycleController.getCycles);
 router.get('/cycle/:id', cycleController.getCycle);
+router.get('/cycle/section/:sectionId', cycleController.getCyclesBySection);
 
 
 router.use(auth);
