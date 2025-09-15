@@ -33,6 +33,8 @@ exports.getJuryClasse = async (req, res) => {
   }
 };
 
+
+
 exports.updateJuryClasse = async (req, res) => {
   try {
     const juryClasse = await JuryClasse.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -68,6 +70,16 @@ exports.createJury = async (req, res) => {
 exports.getJuries = async (req, res) => {
   try {
     const juries = await Jury.find();
+    res.json(juries);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getJuriesByAnneeAndSection = async (req, res) => {
+  try {
+    const { anneeId, sectionId } = req.params;
+    const juries = await Jury.find({ anneeId, sectionId });
     res.json(juries);
   } catch (err) {
     res.status(500).json({ error: err.message });

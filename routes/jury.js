@@ -9,6 +9,7 @@ router.get('/', juryController.getJuries);
 router.get('/:id', juryController.getJury);
 router.put('/id', juryController.updateJury);
 router.delete('/jury/:id', juryController.deleteJury);
+router.get('/annee/:anneeId/section/:sectionId', juryController.getJuriesByAnneeAndSection);
 
 // JuryClasse CRUD
 router.post('/classe', juryClasseController.createJuryClasse);
