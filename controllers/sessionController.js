@@ -36,14 +36,15 @@ exports.getSessionsByAnneeWithCours = async (req, res) => {
     if(!sessions || sessions.length === 0) {
       return res.status(404).json({ error: 'No sessions found for this year' });
     }
-    //
-    const sessionsDetail = await sessions.map(session => {
-      const coursDetails = session.cours.map(coursId => {
-        return Cours.findById(coursId);
-      });
-      return { ...session.toObject(), cours: coursDetails };
-    });
-    
+    // Correction ici : on attend la résolution de tous les cours
+    const sessionsDetail = await Promise.all(
+      sessions.map(async session => {
+        const coursDetails = await Promise.all(
+          session.cours.map(coursId => Cours.findById(coursId))
+        );
+        return { ...session.toObject(), cours: coursDetails };
+      })
+    );
     res.json(sessionsDetail);
   } catch (err) {
     res.status(500).json({ error: err.message });
