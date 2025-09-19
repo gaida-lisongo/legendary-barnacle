@@ -7,6 +7,7 @@ const produitController = require('../controllers/produitController');
 // Commande routes
 router.get('/commande', commandeController.getCommandes);
 router.get('/commande/:id', commandeController.getCommande);
+router.get('/commande/key/:key/value/:value', commandeController.getCommandesByKeys);
 router.get('/produit', produitController.getProduits);
 router.get('/produit/:id', produitController.getProduit);
 router.get('/produit/categorie/:categorie', produitController.getProduitsByCategorie);

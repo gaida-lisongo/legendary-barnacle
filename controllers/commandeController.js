@@ -19,6 +19,20 @@ exports.getCommandes = async (req, res) => {
   }
 };
 
+exports.getCommandesByKeys = async (req, res) => {
+  try {
+    const { key, value } = req.params;
+    const filter = {};
+    filter[key] = value;
+    const commandes = await Commande.find(filter);
+    res.json(commandes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
 exports.getCommande = async (req, res) => {
   try {
     const commande = await Commande.findById(req.params.id);

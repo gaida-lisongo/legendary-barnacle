@@ -7,6 +7,7 @@ const anneeController = require('../controllers/anneeController');
 // Session routes
 router.get('/session', sessionController.getSessions);
 router.get('/session/:id', sessionController.getSession);
+router.get('/session/annee/:anneeId', sessionController.getSessionsByAnneeWithCours);
 router.get('/', anneeController.getAnnees);
 router.get('/:id', anneeController.getAnnee);
 
