@@ -18,6 +18,10 @@ const CoursSchema = new mongoose.Schema({
   }],
   travaux: [{
     anneeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Annee' },
+    questionnaire: {
+      type: String,
+      required: false
+    },
     produitId: { type: mongoose.Schema.Types.ObjectId, ref: 'Produit' },
     status: { type: String, enum: ['NO', 'PENDING', 'OK'] }
   }],

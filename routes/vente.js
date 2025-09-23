@@ -12,10 +12,10 @@ router.get('/produit', produitController.getProduits);
 router.get('/produit/:id', produitController.getProduit);
 router.get('/produit/categorie/:categorie', produitController.getProduitsByCategorie);
 router.get('/produit/annee/:anneeId/section/:sectionId', produitController.getProduitByAnneeAndSection);
+router.post('/commande', commandeController.createCommande);
 
 
 router.use(auth);
-router.post('/commande', commandeController.createCommande);
 router.put('/commande/:id', commandeController.updateCommande);
 router.delete('/commande/:id', commandeController.deleteCommande);
 

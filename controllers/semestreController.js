@@ -1,4 +1,6 @@
 const Semestre = require('../models/Semestre');
+const Cours = require('../models/Cours');
+const Unite = require('../models/Unite');
 
 exports.createSemestre = async (req, res) => {
   try {
@@ -23,6 +25,19 @@ exports.getSemestre = async (req, res) => {
   try {
     const semestre = await Semestre.findById(req.params.id);
     if (!semestre) return res.status(404).json({ error: 'Not found' });
+    const semestreUnites = semestre.unites.map(async (uniteId) => {
+      const unite = await Unite.findById(uniteId);
+      if (!unite) return null;
+
+      const uniteCours = unite.cours.map(async (coursId) => {
+        const cours = await Cours.findById(coursId);
+        if (!cours) return null;
+        return cours;
+      });
+      unite.cours = await Promise.all(uniteCours);
+      return unite;
+    });
+    semestre.unites = await Promise.all(semestreUnites);
     res.json(semestre);
   } catch (err) {
     res.status(500).json({ error: err.message });

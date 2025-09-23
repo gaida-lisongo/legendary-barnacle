@@ -6,7 +6,8 @@ const uniteController = require('../controllers/uniteController');
 const semestreController = require('../controllers/semestreController');
 const cycleController = require('../controllers/cycleController');
 const chargeController = require('../controllers/chargeController');
-
+const ficheController = require('../controllers/ficheController');
+const Rapport = require('../models/Rapport');
 // Cours routes
 router.get('/cours', coursController.getCoursList);
 router.get('/cours/:id', coursController.getCours);
@@ -23,6 +24,21 @@ router.get('/charge/agent/:enseignantId', chargeController.getChargesByEnseignan
 router.get('/charge/cours/:coursId', chargeController.getChargesByCours);
 router.get('/charge/annee/:anneeId', chargeController.getChargesByAnnee);
 
+
+router.get('/rapport/:produitId', async (req, res) => {
+    try {
+        const rapport = await Rapport.findOne({ produitId: req.params.produitId }).populate('etudiantId');
+        res.json(rapport);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+//Route Pour faire du crud sur le fiche
+router.get('/fiche', ficheController.getFiches);
+router.get('/fiche/:id', ficheController.getFiche);
+router.post('/fiche', ficheController.createFiche);
+router.put('/fiche/:id', ficheController.updateFiche);
+router.delete('/fiche/:id', ficheController.deleteFiche);
 router.use(auth);
 
 // Charge routes

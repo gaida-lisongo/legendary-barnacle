@@ -10,7 +10,7 @@ class MoneyManager {
 
     async createTransaction({amount, currency, reference, phone}) {
         const payload = {
-            callbackUrl: "https://btp-sections.netlify.app/success",
+            callbackUrl: "http://localhost:4001/payment/success",
             merchant: this.merchant,
             amount: amount,
             currency: currency,
