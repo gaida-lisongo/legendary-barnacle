@@ -7,6 +7,7 @@ router.get('/', etudiantController.getEtudiants);
 router.get('/:id', etudiantController.getEtudiant);
 router.post('/', etudiantController.createEtudiant);
 router.post('/login', etudiantController.loginEtudiant);
+router.get('/resultats/:matricule', etudiantController.getResultats);
 
 // Etudiant routes
 router.use(auth);

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const UniteSchema = new mongoose.Schema({
   semestreId: { type: mongoose.Schema.Types.ObjectId, ref: 'Semestre' },
   responsable: [{
-    titulaireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Titulaire' },
+    titulaireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },
     anneeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Annee' }
   }],
   descripteur: {

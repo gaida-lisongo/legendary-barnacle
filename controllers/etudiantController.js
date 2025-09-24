@@ -38,6 +38,37 @@ exports.getEtudiant = async (req, res) => {
   }
 };
 
+exports.getResultats = async (req, res) => {
+  try {
+    const { matricule } = req.params;
+    const etudiant = await Etudiant.findOne({ matricule });
+    if (!etudiant) return res.status(404).json({ success: false, message: 'Not found' });
+    
+    //Recupérer tous les semestres auquel l'étudiant a été inscrit
+    const commandesData = await Commande.find({ matricule });
+    let allSemestres = [];
+
+    for (const commande of commandesData) {
+      const semestres = await Semestre.find({ insription: { $elemMatch: { produitId: commande.productIds } } }).populate('unites');
+      
+      //Check if semestre existed already
+      for (const semestre of semestres) {
+        if (!allSemestres.find((s) => s._id.toString() === semestre._id.toString())) {
+
+          allSemestres.push(semestre);
+        }
+      }
+    }
+
+    //Vérifier le resultat obtenue par l'étudiant dans que matière du semestre
+
+    //Retourner les resultats
+    res.status(200).json({ success: true, message: 'Resultats retrieved successfully', data: allSemestres });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Resultats retrieval failed', error: err.message });
+  }
+};
+
 exports.updateEtudiant = async (req, res) => {
   try {
     const etudiant = await Etudiant.findByIdAndUpdate(req.params.id, req.body, { new: true });
