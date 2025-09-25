@@ -9,6 +9,7 @@ const Cours = require('../models/Cours');
 const Fiche = require('../models/Fiche');
 const Jury = require('../models/Jury');
 const JuryClasse = require('../models/JuryClasse');
+const Etudiant = require('../models/Etudiant');
 const Produit = require('../models/Produit');
 const Commande = require('../models/Commande');
 const crypto = require('crypto');
@@ -117,15 +118,14 @@ router.get('/charges/:titulaireId', async (req, res) => {
       });
     }
 
-    // Étape 3 : Récupérer toutes les commandes contenant ces produits
     let commandes = [];
     for (const produitId of Array.from(allProduitIds)) {
       console.log("Produit ID : ", produitId);
       const produit = await Produit.findById(produitId);
       console.log("Produit : ", produit);
-      const commandes = await Commande.find({ productIds: produitId });
-      const produitWithCommandes = { ...produit.toObject(), commandes };
-      commandes.push(...produitWithCommandes);
+      const commandesProduit = await Commande.find({ productIds: produitId });
+      const produitWithCommandes = { ...produit.toObject(), commandes: commandesProduit };
+      commandes.push(produitWithCommandes);
     }
     console.log("Commandes : ", commandes);
 
@@ -147,11 +147,11 @@ router.get('/juries/:agentId', async (req, res) => {
     try {
       const agentId = req.params.agentId;
   
-      // Étape 1 : trouver les jurys où l’agent est membre du bureau
+      // Étape 1 : trouver les jurys où l'agent est membre du bureau
       const jurys = await Jury.find({ 'bureau.agentId': agentId })
         .populate('anneId')
         .populate('sectionId')
-        .lean();  // lean() pour avoir des objets JS simples
+        .lean();
   
       const dataJurys = [];
   
@@ -159,107 +159,106 @@ router.get('/juries/:agentId', async (req, res) => {
         const juryId = jury._id;
         const anneeId = jury.anneId._id.toString();
   
-        // Étape 2 : trouver les classes associées actives pour ce jury
-        const juryClasses = await JuryClasse.find({ juryId, status: 'active' }).lean();
-  
+        // Étape 2 : trouver les cycles de cette section
+        const cycles = await Cycle.find({ sectionId: jury.sectionId._id }).lean();
+        
         const classesData = [];
   
-        // Pour chaque classe
-        for (const jc of juryClasses) {
-          const classeId = jc.classeId;
+        // Pour chaque cycle
+        for (const cycle of cycles) {
+          // Pour chaque classe dans le cycle
+          for (const classe of cycle.classes) {
+            const classeId = classe._id;
+            const semestresIds = classe.semestres;
   
-          // Étape 3 : trouver le cycle qui contient cette classe,
-          // pour récupérer les semestres de cette classe
-          const cycle = await Cycle.findOne({ 'classes._id': classeId })
-            .lean();
+            // Étape 3 : récupérer les détails des semestres
+            const semestres = await Semestre.find({ _id: { $in: semestresIds } })
+              .populate('unites')
+              .lean();
   
-          if (!cycle) continue;
+            const semestresData = [];
   
-          // Trouver dans cycle.classes l’élément classe correspondant
-          const thisClasse = cycle.classes.find(c => c._id.toString() === classeId.toString());
+            // Pour chaque semestre
+            for (const semestre of semestres) {
+              const unitesData = [];
   
-          // Si pas trouvé, continue
-          if (!thisClasse) continue;
+              // Pour chaque unité du semestre
+              for (const unite of semestre.unites) {
+                // Récupérer les détails de l'unité avec ses cours
+                const uniteComplete = await Unite.findById(unite._id)
+                  .populate('cours')
+                  .lean();
+                console.log("Unite : ", uniteComplete);
+                if (!uniteComplete) continue;
   
-          const semestresIds = thisClasse.semestres.map(s => s.toString());
+                const coursDataArr = [];
   
-          // Étape 4 : pour ces semestres, trouver les unités
-          const unites = await Unite.find({ semestreId: { $in: semestresIds } })
-            .populate('cours')
-            .lean();
+                // Pour chaque cours de l'unité
+                for (const cours of uniteComplete.cours) {
+                  // Étape 4 : trouver les charges de ce cours pour l'année du jury
+                  const charges = await Charge.find({
+                    coursId: cours._id,
+                    anneeId: jury.anneId._id
+                  }).lean();
   
-          const semestresData = [];
+                  const fichesData = [];
   
-          // Pour chaque semestre
-          for (const semestreId of semestresIds) {
-            // récupérer les unités de ce semestre
-            const unitesDeSemestre = unites.filter(u => u.semestreId.toString() === semestreId.toString());
+                  // Pour chaque charge, récupérer les fiches
+                  for (const charge of charges) {
+                    const fiches = await Fiche.find({ chargeId: charge._id })
+                      .populate('etudiantId')
+                      .lean();
   
-            const unitesData = [];
-  
-            for (const unite of unitesDeSemestre) {
-              // Pour chaque unité, parcourir ses cours
-              const coursDataArr = [];
-  
-              for (const cours of unite.cours) {
-                // Étape 5 : trouver les charges de ce cours pour l’année du jury
-                const charges = await Charge.find({
-                  coursId: cours._id,
-                  anneeId: jury.anneId._id
-                }).lean();
-  
-                const fichesData = [];
-  
-                // Pour chaque charge, récupérer les fiches
-                for (const charge of charges) {
-                  const fiches = await Fiche.find({ chargeId: charge._id })
-                    .populate('etudiantId')
-                    .lean();
-  
-                  for (const fiche of fiches) {
-                    fichesData.push({
-                      ficheId: fiche._id,
-                      etudiant: fiche.etudiantId,
-                      status: fiche.status,
-                      cmi: fiche.cmi,
-                      examen: fiche.examen,
-                      rattrapage: fiche.rattrapage,
-                      reference: fiche.reference
-                    });
+                    for (const fiche of fiches) {
+                      fichesData.push({
+                        ficheId: fiche._id,
+                        etudiant: fiche.etudiantId,
+                        status: fiche.status,
+                        cmi: fiche.cmi,
+                        examen: fiche.examen,
+                        rattrapage: fiche.rattrapage,
+                        reference: fiche.reference
+                      });
+                    }
                   }
+  
+                  // Ajouter le cours avec ses fiches
+                  coursDataArr.push({
+                    coursId: cours._id,
+                    titre: cours.titre,
+                    description: cours.description,
+                    credit: cours.credit,
+                    fiches: fichesData
+                  });
                 }
   
-                // On ajoute le cours avec ses fiches (s’il y en a, sinon vide)
-                coursDataArr.push({
-                  coursId: cours._id,
-                  titre: cours.titre,
-                  description: cours.description,
-                  credit: cours.credit,
-                  // tu peux ajouter autres champs du cours si besoin
-                  fiches: fichesData
+                // Ajouter l'unité avec ses cours
+                unitesData.push({
+                  uniteId: uniteComplete._id,
+                  designation: uniteComplete.descripteur?.designation,
+                  code: uniteComplete.descripteur?.code,
+                  credit: uniteComplete.descripteur?.credit,
+                  cours: coursDataArr
                 });
               }
   
-              unitesData.push({
-                uniteId: unite._id,
-                designation: unite.descripteur?.designation,
-                code: unite.descripteur?.code,
-                credit: unite.descripteur?.credit,
-                cours: coursDataArr
+              // Ajouter le semestre avec ses unités
+              semestresData.push({
+                semestreId: semestre._id,
+                designation: semestre.designation,
+                description: semestre.description,
+                unites: unitesData
               });
             }
   
-            semestresData.push({
-              semestreId: semestreId,
-              unites: unitesData
+            // Ajouter la classe avec ses semestres
+            classesData.push({
+              classeId: classeId,
+              designation: classe.designation,
+              description: classe.description,
+              semestres: semestresData
             });
           }
-  
-          classesData.push({
-            classeId: classeId,
-            // tu peux rajouter nom, designation de classe si tu as les infos quelque part
-            semestres: semestresData
-          });
         }
   
         dataJurys.push({
@@ -275,6 +274,7 @@ router.get('/juries/:agentId', async (req, res) => {
   
       res.json({
         success: true,
+        message: 'Jurys retrieved successfully',
         data: {
           agentId,
           jurys: dataJurys
@@ -282,9 +282,117 @@ router.get('/juries/:agentId', async (req, res) => {
       });
   
     } catch (err) {
-      console.error('Erreur dans /deliberations/:agentId', err);
+      console.error('Erreur dans /juries/:agentId', err);
       res.status(500).json({ error: err.message });
     }
+});
+
+router.get('/grille/:classeId/:anneeId', async (req, res) => {
+  try {
+    const classeId = req.params.classeId;
+    const anneeId = req.params.anneeId;
+    
+    const cycle = await Cycle.findOne({ 'classes._id': classeId }).populate('classes').lean();
+    console.log("Cycle : ", cycle);
+    
+    if (!cycle) {
+      return res.status(404).json({ error: 'Cycle non trouvé' });
+    }
+
+    const findClasse = cycle.classes.find(c => c._id.toString() === classeId);
+    if (!findClasse) {
+      return res.status(404).json({ error: 'Classe non trouvée' });
+    }
+
+    const semestresData = await Semestre.find({ _id: { $in: findClasse.semestres } }).populate('unites').lean();
+    const semestresDataArr = [];
+    
+    // Utiliser for...of au lieu de forEach pour gérer les promesses
+    for (const semestre of semestresData) {
+      let etudiants = [];
+      let unitesData = [];
+
+      // Traiter les inscriptions avec for...of
+      for (const inscription of semestre.insription || []) {
+        // Hydratation Etudiants
+        const commandes = await Commande.find({ productIds: inscription.produitId }).lean();
+        if (commandes.length > 0) {
+          let matricules = [];
+
+          commandes.forEach(commande => {
+            console.log("Commande : ", commande);
+            // Check if matricule is not already in matricules
+            if (!matricules.includes(commande.matricule)) {
+              matricules.push(commande.matricule);
+            }
+          });
+          
+          console.log("Matricules : ", matricules);
+          const etudiantsData = await Etudiant.find({ matricule: { $in: matricules } }).lean();
+          etudiantsData.forEach(etudiant => {
+            // Éviter les doublons d'étudiants
+            if (!etudiants.find(e => e._id.toString() === etudiant._id.toString())) {
+              etudiants.push(etudiant);
+            }
+          });
+        }
+      }
+
+      // Hydratation Unites - utiliser for...of au lieu de forEach
+      for (const unite of semestre.unites || []) {
+        let coursData = [];
+        
+        // Récupérer les détails complets de l'unité avec ses cours
+        const uniteComplete = await Unite.findById(unite._id).populate('cours').lean();
+        if (!uniteComplete) continue;
+
+        // Traiter les cours avec for...of
+        for (const cours of uniteComplete.cours || []) {
+          const chargeData = await Charge.findOne({ anneeId: anneeId, coursId: cours._id }).lean();
+          if (chargeData) {
+            const fichesData = await Fiche.find({ chargeId: chargeData._id }).populate('etudiantId').lean();
+            coursData.push({
+              coursId: cours._id,
+              titre: cours.titre,
+              description: cours.description,
+              credit: cours.credit,
+              fiches: fichesData
+            });
+          }
+        }
+
+        unitesData.push({
+          uniteId: uniteComplete._id,
+          designation: uniteComplete.descripteur?.designation || uniteComplete.designation,
+          code: uniteComplete.descripteur?.code || uniteComplete.code,
+          credit: uniteComplete.descripteur?.credit || uniteComplete.credit,
+          cours: coursData
+        });
+      }
+
+      semestresDataArr.push({
+        semestreId: semestre._id,
+        designation: semestre.designation,
+        description: semestre.description,
+        etudiants: etudiants,
+        unites: unitesData
+      });
+    }
+
+    const classeData = {
+      classeId: findClasse._id,
+      designation: findClasse.designation,
+      description: findClasse.description,
+      semestres: semestresDataArr
+    };
+    
+    console.log("Classe Data Final : ", JSON.stringify(classeData, null, 2));
+    res.json({ success: true, message: 'Classe trouvée', data: classeData });
+    
+  } catch (err) {
+    console.error('Erreur dans /grille/:classeId/:anneeId', err);
+    res.status(500).json({ error: err.message });
+  }
 });
   
 
