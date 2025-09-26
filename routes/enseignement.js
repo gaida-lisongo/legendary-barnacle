@@ -8,6 +8,8 @@ const cycleController = require('../controllers/cycleController');
 const chargeController = require('../controllers/chargeController');
 const ficheController = require('../controllers/ficheController');
 const Rapport = require('../models/Rapport');
+const Cycle = require('../models/Cycle');
+
 // Cours routes
 router.get('/cours', coursController.getCoursList);
 router.get('/cours/:id', coursController.getCours);
@@ -64,6 +66,36 @@ router.delete('/semestre/:id', semestreController.deleteSemestre);
 // Cycle routes
 router.post('/cycle', cycleController.createCycle);
 router.put('/cycle/:id', cycleController.updateCycle);
+router.put('/cycle/classe/:id', async (req, res) => {
+    try {
+        const { vision } = req.body;
+
+        // Validation simple de l'entrée
+        if (!['active', 'inactive'].includes(vision)) {
+            return res.status(400).json({ error: "vision doit être 'OK' ou 'NO'" });
+        }
+
+        // Trouver le cycle contenant la classe par l'id de la classe (subdocument)
+        const classeId = req.params.id;
+        const cycle = await Cycle.findOne({ 'classes._id': classeId });
+        console.log('Current cycle : ', cycle);
+        if (!cycle) return res.status(404).json({ error: 'Cycle non trouvé pour cette classe' });
+
+        // Récupérer la classe subdocument
+        const classe = cycle.classes.id(classeId);
+        if (!classe) return res.status(404).json({ error: 'Classe non trouvée dans le cycle' });
+
+        // Mettre à jour la vision et sauvegarder
+        classe.vision = vision;
+        await cycle.save();
+
+        console.log('Updated classe : ', classe);
+        res.json({ success: true, message: 'Classe mise à jour', data: classe });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: err.message });
+    }
+});
 router.delete('/cycle/:id', cycleController.deleteCycle);
 
 module.exports = router;

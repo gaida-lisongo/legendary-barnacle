@@ -255,12 +255,22 @@ router.get('/juries/:agentId', async (req, res) => {
             // Ajouter la classe avec ses semestres
             classesData.push({
               classeId: classeId,
+              vision: classe.vision,
               designation: classe.designation,
               description: classe.description,
               semestres: semestresData
             });
           }
         }
+
+        const bureau = jury.bureau.map(async (b) => {
+          const agent = await Agent.findById(b.agentId)
+          return {
+            fonction: b.fonction,
+            agent: agent
+          }
+        })
+        const bureauData = await Promise.all(bureau)
   
         dataJurys.push({
           juryId: juryId,
@@ -269,7 +279,8 @@ router.get('/juries/:agentId', async (req, res) => {
           annee: jury.anneId,
           section: jury.sectionId,
           role: jury.bureau.find(b => b.agentId.toString() === agentId.toString())?.fonction || null,
-          classes: classesData
+          classes: classesData,
+          bureau: bureauData
         });
       }
   

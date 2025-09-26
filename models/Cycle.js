@@ -6,6 +6,12 @@ const CycleSchema = new mongoose.Schema({
   systeme: String,
   sectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section', required: true },
   classes: [{
+    vision: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'inactive',
+      require: false
+    },
     designation: String,
     description: String,
     semestres: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Semestre' }]
