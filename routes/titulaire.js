@@ -15,6 +15,7 @@ const Commande = require('../models/Commande');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Agent = require('../models/Agent');
+const mongoose = require('mongoose');
 
 router.post('/auth', async (req, res) => {
   const { matricule, password } = req.body;
@@ -291,9 +292,18 @@ router.get('/grille/:classeId/:anneeId', async (req, res) => {
   try {
     const classeId = req.params.classeId;
     const anneeId = req.params.anneeId;
+    // Cast de l'anneeId et préparation des variantes pour correspondre même si les données existantes sont en string
+    let anneeObjectId = null;
+    let anneeIdStr = null;
+    try {
+      anneeObjectId = new mongoose.Types.ObjectId(anneeId);
+      anneeIdStr = anneeObjectId.toString();
+    } catch (e) {
+      // Si anneeId n'est pas un ObjectId valide, on garde la string
+      anneeIdStr = String(anneeId);
+    }
     
     const cycle = await Cycle.findOne({ 'classes._id': classeId }).populate('classes').lean();
-    console.log("Cycle : ", cycle);
     
     if (!cycle) {
       return res.status(404).json({ error: 'Cycle non trouvé' });
@@ -320,14 +330,12 @@ router.get('/grille/:classeId/:anneeId', async (req, res) => {
           let matricules = [];
 
           commandes.forEach(commande => {
-            console.log("Commande : ", commande);
             // Check if matricule is not already in matricules
             if (!matricules.includes(commande.matricule)) {
               matricules.push(commande.matricule);
             }
           });
           
-          console.log("Matricules : ", matricules);
           const etudiantsData = await Etudiant.find({ matricule: { $in: matricules } }).lean();
           etudiantsData.forEach(etudiant => {
             // Éviter les doublons d'étudiants
@@ -340,24 +348,43 @@ router.get('/grille/:classeId/:anneeId', async (req, res) => {
 
       // Hydratation Unites - utiliser for...of au lieu de forEach
       for (const unite of semestre.unites || []) {
+        console.log("Unite : ", unite);
         let coursData = [];
-        
         // Récupérer les détails complets de l'unité avec ses cours
         const uniteComplete = await Unite.findById(unite._id).populate('cours').lean();
         if (!uniteComplete) continue;
 
         // Traiter les cours avec for...of
         for (const cours of uniteComplete.cours || []) {
-          const chargeData = await Charge.findOne({ anneeId: anneeId, coursId: cours._id }).lean();
-          if (chargeData) {
-            const fichesData = await Fiche.find({ chargeId: chargeData._id }).populate('etudiantId').lean();
-            coursData.push({
-              coursId: cours._id,
-              titre: cours.titre,
-              description: cours.description,
-              credit: cours.credit,
-              fiches: fichesData
-            });
+          const coursIdRaw = cours && cours._id ? cours._id : cours;
+          const coursIdStr = coursIdRaw ? coursIdRaw.toString() : null;
+          let coursIdObj = null;
+          try {
+            coursIdObj = coursIdStr ? new mongoose.Types.ObjectId(coursIdStr) : null;
+          } catch (e) {
+            coursIdObj = null;
+          }
+          
+          // Requête tolérante: tente avec ObjectId et string pour couvrir des données incohérentes
+          const chargesData = await Charge.find({
+            anneeId: { $in: [anneeObjectId, anneeIdStr].filter(Boolean) },
+            coursId: { $in: [coursIdObj, coursIdStr].filter(Boolean) }
+          }).lean();
+          
+          if (chargesData) {
+            for (const chargeData of chargesData) {
+              console.log("Charge Data : ", chargeData);
+              const fichesData = await Fiche.find({ chargeId: chargeData._id.toString() }).populate('etudiantId').lean();
+
+              console.log("Fiches Data : ", fichesData);
+              coursData.push({
+                coursId: cours._id,
+                titre: cours.titre,
+                description: cours.description,
+                credit: cours.credit,
+                fiches: fichesData
+              });
+            }
           }
         }
 
@@ -386,7 +413,6 @@ router.get('/grille/:classeId/:anneeId', async (req, res) => {
       semestres: semestresDataArr
     };
     
-    console.log("Classe Data Final : ", JSON.stringify(classeData, null, 2));
     res.json({ success: true, message: 'Classe trouvée', data: classeData });
     
   } catch (err) {

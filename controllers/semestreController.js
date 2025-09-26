@@ -23,10 +23,11 @@ exports.getSemestres = async (req, res) => {
 
 exports.getSemestre = async (req, res) => {
   try {
-    const semestre = await Semestre.findById(req.params.id);
+    const semestre = await Semestre.findById(req.params.id).lean();
+    console.log("Semestre :", semestre);
     if (!semestre) return res.status(404).json({ error: 'Not found' });
     const semestreUnites = semestre.unites.map(async (uniteId) => {
-      const unite = await Unite.findById(uniteId);
+      const unite = await Unite.findById(uniteId.toString());
       if (!unite) return null;
 
       const uniteCours = unite.cours.map(async (coursId) => {
@@ -38,6 +39,7 @@ exports.getSemestre = async (req, res) => {
       return unite;
     });
     semestre.unites = await Promise.all(semestreUnites);
+    console.log("Semestre :", semestre);
     res.json(semestre);
   } catch (err) {
     res.status(500).json({ error: err.message });
