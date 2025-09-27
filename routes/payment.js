@@ -4,6 +4,8 @@ const Commande = require('../models/Commande');
 const moneyManager = require('../service/MoneyManager');
 const Fiche = require('../models/Fiche');
 const Etudiant = require('../models/Etudiant');
+const Resultat = require('../models/Resultat');
+const Recours = require('../models/Recours');
 
 router.post('/:id', async (req, res) => {
     try {
@@ -102,6 +104,97 @@ router.post('/fiche/:id', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.post('/resultat/:classeId', async (req, res) => {
+    try {
+        const { matricule, telephone } = req.body;
+        const { classeId } = req.params;
+        
+        const etudiant = await Etudiant.findOne({ matricule });
+        if (!etudiant) {
+            return res.status(404).json({ error: 'Not found' });
+        }
+
+        const data = await moneyManager.createTransaction({ 
+          amount: 3000, 
+          currency: "CDF", 
+          reference: `${etudiant.nom}:${etudiant.email}`, 
+          phone: telephone 
+        });
+        
+        if (!data.orderNumber) {
+          return res.status(501).json({ error: data.message });
+        }
+
+        const resultat = new Resultat({ 
+          classeId,
+          etudiantId: etudiant._id, 
+          telephone,
+          reference: data.orderNumber,
+          montant: 3000,
+          currency: "CDF", 
+          status: "NO"
+        });
+
+        const resultatSave = await resultat.save();
+        res.json({ 
+          success: true, 
+          message: 'Resultat created successfully', 
+          data: {
+            etudiant: etudiant.toObject(),
+            resultat: resultatSave.toObject()
+          } 
+        });
+        
+    } catch (error) {
+        console.error('Error when creating payment resultat :', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/recours/:etudiantId', async (req, res) => {
+  try {
+    const { etudiantId } = req.params;
+    const { noteId, object, telephone } = req.body;
+    
+    const etudiant = await Etudiant.findById(etudiantId).lean();
+    if (!etudiant) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const data = await moneyManager.createTransaction({ 
+      amount: 1500, 
+      currency: "CDF", 
+      reference: `${etudiant.nom}:${etudiant.email}`, 
+      phone: telephone 
+    });
+    
+    if (!data.orderNumber) {
+      return res.status(501).json({ error: data.message });
+    }
+
+    const recours = new Recours({ 
+      etudiantId: etudiant._id, 
+      noteId,
+      reference: data.orderNumber,
+      object
+    });
+
+    const recoursSave = await recours.save();
+    res.json({ 
+      success: true, 
+      message: 'Recours created successfully', 
+      data: {
+        etudiant: etudiant.toObject(),
+        recours: recoursSave.toObject()
+      } 
+    });
+    
+  } catch (error) {
+    console.error('Error when creating payment recours :', error);
+    res.status(500).json({ error: error.message });
+  }
+})
 
 router.post('/success', async (req, res) => {
     try {
