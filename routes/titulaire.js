@@ -8,7 +8,7 @@ const Charge = require('../models/Charge');
 const Cours = require('../models/Cours');
 const Fiche = require('../models/Fiche');
 const Jury = require('../models/Jury');
-const JuryClasse = require('../models/JuryClasse');
+const Recours = require('../models/Recours');
 const Etudiant = require('../models/Etudiant');
 const Produit = require('../models/Produit');
 const Commande = require('../models/Commande');
@@ -432,5 +432,11 @@ router.get('/grille/:classeId/:anneeId', async (req, res) => {
   }
 });
   
-
+router.get('/recours/:chargeId', async (req, res) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+})
 module.exports = router;

@@ -7,7 +7,12 @@ const RecoursSchema = new mongoose.Schema({
     object: { type: String, required: false },
     contenu : [{ type: String, required: false }],
     status: { type: String, enum: ['NO', 'PENDING', 'OK'], default: 'NO' },
-    preuve: { type: String, required: false },    
+    preuve: { type: String, required: false },  
+    agent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Agent',
+        require: false
+    }  
 })
 
 module.exports = mongoose.model('Recours', RecoursSchema);

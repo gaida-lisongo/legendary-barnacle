@@ -184,10 +184,7 @@ router.post('/recours/:etudiantId', async (req, res) => {
     res.json({ 
       success: true, 
       message: 'Recours created successfully', 
-      data: {
-        etudiant: etudiant.toObject(),
-        recours: recoursSave.toObject()
-      } 
+      data: recoursSave.toObject()
     });
     
   } catch (error) {
