@@ -4,8 +4,8 @@ class MoneyManager {
     constructor() {
         this.payment = process.env.FLEX_HOST;
         this.check = process.env.FLEX_CHECK;
-        this.token = process.env.FLEX_TOKEN;
-        this.merchant = process.env.FLEX_MERCHANT;
+        this.token = process.env.FLEX_TOKEN_HE;
+        this.merchant = process.env.FLEX_MERCHANT_HE;
     }
 
     async createTransaction({amount, currency, reference, phone}) {
