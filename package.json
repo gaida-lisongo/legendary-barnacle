@@ -1,10 +1,10 @@
 {
   "scripts": {
     "dev": "nodemon index.js",     
-    "start": "pm2 start index.js --name server-section" ,
-    "restart": "pm2 restart server-section",
-    "stop": "pm2 stop server-section",
-    "logs": "pm2 logs server-section"
+    "start": "pm2 start index.js --name server-btp" ,
+    "restart": "pm2 restart server-btp",
+    "stop": "pm2 stop server-btp",
+    "logs": "pm2 logs server-btp"
   },
   "dependencies": {
     "cors": "^2.8.5",
