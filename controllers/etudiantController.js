@@ -153,11 +153,6 @@ exports.loginEtudiant = async (req, res) => {
         }
       }
       
-      console.log("My Recherches: ", myRecherches);
-      console.log("My Stages: ", myStages);
-      console.log("My Validations: ", myValidations);
-      console.log("My Releves: ", myReleves);
-      console.log("My Sessions: ", mySessions);
       // Traitement des semestres
       for (const productId of commande.productIds) {
 
@@ -169,15 +164,22 @@ exports.loginEtudiant = async (req, res) => {
             for (const uniteId of semestre.unites) {
               const unite = await Unite.findById(uniteId);
               let coursData = [];
-              
               // Traitement des cours
-              for (const coursId of unite.cours) {
-                const ecue = await Cours.findById(coursId);
-                const isExist = fichesStudent.find((fiche) => fiche.chargeId.coursId.toString() === coursId.toString());
-                coursData.push({ ...ecue.toObject(), fiche_cotation: isExist ? isExist : null });
+              if(unite && unite?.cours.length){
+                console.log("Liste Of Cours :",unite.cours);
+
+                for (const coursId of unite.cours) {
+                  console.log("Detail Id cours: ", coursId);
+                  const ecue = await Cours.findById(coursId);
+                  console.log("All fiches student :",)
+                  console.log("All Fichs:", fichesStudent);
+                  const isExist = fichesStudent.find((fiche) => fiche?.chargeId && fiche.chargeId.coursId.toString() === coursId.toString());
+                  coursData.push({ ...ecue.toObject(), fiche_cotation: isExist ? isExist : null });
+                }
+
+                unitesData.push({ ...unite.toObject(), cours: coursData });
               }
               
-              unitesData.push({ ...unite.toObject(), cours: coursData });
             }
             
             mySemestres.push({ ...semestre.toObject(), unites: unitesData });
