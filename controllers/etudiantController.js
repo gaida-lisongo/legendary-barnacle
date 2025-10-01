@@ -97,20 +97,14 @@ exports.loginEtudiant = async (req, res) => {
   }
   try {
     // Cryptage SHA1 du mot de passe
-    console.log("Secure uncrypte: ", password);
-
     const hash = crypto.createHash('sha1').update(password).digest('hex');
-    console.log("Secure crypte: ", hash)
     const etudiant = await Etudiant.findOne({ matricule, secure: hash });
-    console.log("Etudiant: ", etudiant);
-    console.log("Matricule: ", matricule);
-    console.log("Password: ", password);
     if (!etudiant.toObject()) {
       return res.status(401).json({ error: 'Identifiants invalides.' });
     }
     // Génération du token
     const token = jwt.sign({ id: etudiant._id, matricule: etudiant.matricule }, 'SECRET_KEY', { expiresIn: '1d' });
-
+    console.log("Current token :", token)
     const commandesData = await Commande.find({ matricule });
 
     let mySemestres = [];
@@ -121,7 +115,13 @@ exports.loginEtudiant = async (req, res) => {
     let mySessions = [];
 
     if (commandesData.length === 0) {
-      return res.status(200).json({ token, etudiant, mySemestres, myRecherches, myStages, myValidations, myReleves, mySessions });
+      return res.status(200).json(
+        {
+          success: true,
+          message: "Login successful",
+          data: { token, etudiant, mySemestres, myRecherches, myStages, myValidations, myReleves, mySessions }
+        }
+      );
     }
 
     // Récupération des données communes une seule fois
@@ -166,13 +166,11 @@ exports.loginEtudiant = async (req, res) => {
               let coursData = [];
               // Traitement des cours
               if(unite && unite?.cours.length){
-                console.log("Liste Of Cours :",unite.cours);
 
                 for (const coursId of unite.cours) {
-                  console.log("Detail Id cours: ", coursId);
-                  const ecue = await Cours.findById(coursId);
-                  console.log("All fiches student :",)
-                  console.log("All Fichs:", fichesStudent);
+                  
+                  const ecue = await Cours.findById(coursId).populate('travaux.produitId');
+                  
                   const isExist = fichesStudent.find((fiche) => fiche?.chargeId && fiche.chargeId.coursId.toString() === coursId.toString());
                   coursData.push({ ...ecue.toObject(), fiche_cotation: isExist ? isExist : null });
                 }
@@ -193,3 +191,23 @@ exports.loginEtudiant = async (req, res) => {
     res.status(500).json({success: false, message: "Login failed", error: err.message });
   }
 };
+
+exports.isCommanded = async (req, res) => {
+  try {
+    const { produitId, matricule } = req.params;
+    const commandesData = await Commande.find({ matricule }).lean();
+    console.log("commandesData :", commandesData);
+    console.log("produitId :", produitId);
+    
+    // Parcourir toutes les commandes et vérifier dans chaque productIds
+    const isCommanded = commandesData.some(commande => 
+      commande.productIds.some(id => id.toString() === produitId.toString())
+    );
+    
+    console.log("isCommanded :", isCommanded);
+    res.json({success: true, message: "Commande checked successfully", data: isCommanded});
+    
+  } catch (error) {
+    res.status(500).json({success: false, message: "Commande check failed", error: error.message});
+  }
+}

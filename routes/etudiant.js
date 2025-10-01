@@ -217,6 +217,8 @@ router.get('/checking-2/:matricule', async (req, res) => {
   }
 });
 
+router.get('/checkProduct/:matricule/:produitId', etudiantController.isCommanded);
+
 // Fonction utilitaire pour calculer la moyenne
 function calculateMoyenne(cmi, examen, rattrapage, credit) {
   // Si il y a un rattrapage, on prend la meilleure note entre examen et rattrapage
