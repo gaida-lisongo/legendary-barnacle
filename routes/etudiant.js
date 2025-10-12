@@ -11,6 +11,7 @@ const Charge = require('../models/Charge');
 const Commande = require('../models/Commande');
 const Produit = require('../models/Produit');
 const Etudiant = require('../models/Etudiant');
+const Parcour = require('../models/Parcour');
 const Annee = require('../models/Annee');
 const Recours = require('../models/Recours');
 
@@ -524,7 +525,130 @@ router.put('/recours/:id', async (req, res) => {
         error: err.message
     });
   }
-})
+});
+
+router.post('/parcours', async (req, res) => {
+  try {
+    const {
+      matricule,
+      classeId,
+      anneeId,
+      faculteId,
+      etabId
+    } = req.body;
+    const etudiant = await Etudiant.findOne({ matricule });
+    if (!etudiant) {
+      return res.status(404).json({
+        success: false,
+        message: "Etudiant not found"
+      });
+    }
+    const parcours = new Parcour({
+      etudiant: etudiant._id,
+      classe: classeId,
+      annee: anneeId,
+      faculteId,
+      etabId
+    });
+    await parcours.save();
+    
+    res.status(201).json({
+        success: true,
+        message: "Parcours created successfully",
+        data: {
+          etudiant: etudiant,
+          parcours: parcours
+        }
+    });
+  } catch (err) {
+    res.status(500).json({
+        success: false,
+        message: "Parcours retrieval failed",
+        error: err.message
+    });
+  }
+});
+
+router.get('/parcours', async (req, res) => {
+  try {
+    const parcours = await Parcour.find().populate('etudiant classe annee');
+    res.status(200).json({
+        success: true,
+        message: "Parcours retrieved successfully",
+        data: parcours
+    });
+  } catch (err) {
+    res.status(500).json({
+        success: false,
+        message: "Parcours retrieval failed",
+        error: err.message
+    });
+  }
+});
+
+router.get('/parcours/:etudiantId', async (req, res) => {
+  try {
+    const parcours = await Parcour.find({ etudiantId: req.params.etudiantId }).populate('etudiant classe annee');
+    res.status(200).json({
+        success: true,
+        message: "Parcours retrieved successfully",
+        data: parcours
+    });
+  } catch (err) {
+    res.status(500).json({
+        success: false,
+        message: "Parcours retrieval failed",
+        error: err.message
+    });
+  }
+});
+
+router.put('/parcours/:id', async (req, res) => {
+  try {
+    const parcours = await Parcour.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!parcours) {
+      return res.status(404).json({
+        success: false,
+        message: "Parcours not found"
+      });
+    }
+    const parcoursUpdated = await parcours.save();
+    res.status(200).json({
+        success: true,
+        message: "Parcours updated successfully",
+        data: parcoursUpdated
+    });
+  } catch (err) {
+    res.status(500).json({
+        success: false,
+        message: "Parcours update failed",
+        error: err.message
+    });
+  }
+});
+
+router.delete('/parcours/:id', async (req, res) => {
+  try {
+    const parcours = await Parcour.findByIdAndDelete(req.params.id);
+    if (!parcours) {
+      return res.status(404).json({
+        success: false,
+        message: "Parcours not found"
+      });
+    }
+    res.status(200).json({
+        success: true,
+        message: "Parcours deleted successfully",
+        data: parcours
+    });
+  } catch (err) {
+    res.status(500).json({
+        success: false,
+        message: "Parcours deletion failed",
+        error: err.message
+    });
+  }
+});
 
 // Etudiant routes
 router.use(auth);
@@ -564,6 +688,5 @@ router.get('/rapport/:etudiantId', async (req, res) => {
 });
 router.put('/:id', etudiantController.updateEtudiant);
 router.delete('/:id', etudiantController.deleteEtudiant);
-
 
 module.exports = router;
