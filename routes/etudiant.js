@@ -574,8 +574,8 @@ router.get('/parcours/classe/:id/annee/:anneeId', async (req, res) => {
     console.log("Current classeId: ", req.params.id);
     const { page } = req.query;
     const limit = 10;
-    const skip = (page - 1) * limit;
-    
+    const skip = (parseInt(page) - 1) * limit;
+
     const parcours = await Parcour.find({ annee: req.params.anneeId})
       .populate('etudiant classe annee')
       .skip(skip)
