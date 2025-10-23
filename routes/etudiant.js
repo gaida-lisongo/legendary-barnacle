@@ -569,6 +569,43 @@ router.post('/parcours', async (req, res) => {
   }
 });
 
+router.get('/parcours/classe/:id/annee/:anneeId', async (req, res) => {  
+  try {
+    console.log("Current classeId: ", req.params.id);
+    const parcours = await Parcour.find({ annee: req.params.anneeId}).populate('etudiant classe annee').lean();
+    console.log("Data Parcours : ", parcours);
+    const filterParcours = [];
+    parcours.map(p => {
+      console.log("Current parcours : ", p);
+      
+      if (p.classe.toString() == req.params.id.toString()){
+        filterParcours.push(p);
+      }
+    });
+
+    if(!filterParcours){
+      res.status(404).json({
+          success: false,
+          message: "Parcours retrieval failed",
+          data: []
+      });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Parcours retrieved successfully",
+        data: filterParcours
+    });
+  } catch (err) {
+    console.error("Error from getting all parcours of classe : ", err)
+    res.status(500).json({
+        success: false,
+        message: "Parcours retrieval failed",
+        error: err.message
+    });
+  }
+})
+
 router.get('/parcours', async (req, res) => {
   try {
     const parcours = await Parcour.find().populate('etudiant classe annee');

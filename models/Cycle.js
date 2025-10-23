@@ -18,4 +18,10 @@ const CycleSchema = new mongoose.Schema({
   }]
 });
 
+CycleSchema.statics.findClasseById = async function(id){
+    const cycle = await this.findOne({ 'classes._id': id }).populate('classes.semestres');
+    const classe = cycle.classes.find(c => c._id.toString() === id.toString());
+    return classe;
+}
+
 module.exports = mongoose.model('Cycle', CycleSchema);
