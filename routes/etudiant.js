@@ -572,7 +572,15 @@ router.post('/parcours', async (req, res) => {
 router.get('/parcours/classe/:id/annee/:anneeId', async (req, res) => {  
   try {
     console.log("Current classeId: ", req.params.id);
-    const parcours = await Parcour.find({ annee: req.params.anneeId}).populate('etudiant classe annee').lean();
+    const { page } = req.query;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+    
+    const parcours = await Parcour.find({ annee: req.params.anneeId})
+      .populate('etudiant classe annee')
+      .skip(skip)
+      .limit(limit)
+      .lean();
     console.log("Data Parcours : ", parcours);
     const filterParcours = [];
     parcours.map(p => {
