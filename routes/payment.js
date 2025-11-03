@@ -65,12 +65,15 @@ router.post('/fiche/:id', async (req, res) => {
     }
     console.log("Current fiche:", fiche.toObject());
 
-    const data = await moneyManager.createTransaction({
+    const payload = {
       amount: 1500,
       currency: "CDF",
       reference: `${nom}:${email}`,
       phone: telephone
-    });
+    }
+
+    console.log("Payload payment cours : ", payload)
+    const data = await moneyManager.createTransaction(payload);
 
     console.log("Response Data : ", data);
 

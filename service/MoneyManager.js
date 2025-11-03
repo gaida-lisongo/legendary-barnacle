@@ -28,6 +28,8 @@ class MoneyManager {
             },
             body: JSON.stringify(payload)
         };
+        console.log("REquest : ", requestOptions);
+        console.log("Payment url : ", this.payment);
 
         try {
             const response = await fetch(this.payment, requestOptions);
