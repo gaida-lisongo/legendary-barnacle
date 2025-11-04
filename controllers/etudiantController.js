@@ -8,6 +8,7 @@ const Produit = require('../models/Produit');
 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const MoneyManager = require('../service/MoneyManager');
 
 exports.createEtudiant = async (req, res) => {
   try {
@@ -256,12 +257,29 @@ exports.isCommanded = async (req, res) => {
     console.log("produitId :", produitId);
     
     // Parcourir toutes les commandes et vérifier dans chaque productIds
-    const isCommanded = commandesData.some(commande => 
+    let isCommanded = false 
+    let message = "Le paiement n'a pas encore aboutit"
+
+    for(const commande of commandesData){
       commande.productIds.some(id => id.toString() === produitId.toString())
-    );
+      const paymentInfo = await MoneyManager.checkTransaction({orderNumber: commande.reference})
+      console.log("paymentInfo :", paymentInfo);
+      if(paymentInfo){
+        const { message: infoPayment, status, transaction } = paymentInfo;
+        if(status == 0){
+          isCommanded = true;
+          message = infoPayment;
+
+          break;
+        } else {
+          isCommanded = false;
+          message = infoPayment;
+        }
+      }
+    }
     
     console.log("isCommanded :", isCommanded);
-    res.json({success: true, message: "Commande checked successfully", data: isCommanded});
+    res.json({success: true, message, data: isCommanded});
     
   } catch (error) {
     res.status(500).json({success: false, message: "Commande check failed", error: error.message});
