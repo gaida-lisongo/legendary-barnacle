@@ -95,10 +95,13 @@ exports.loginEtudiant = async (req, res) => {
   if (!matricule || !password) {
     return res.status(400).json({ error: 'Matricule et mot de passe requis.' });
   }
+
+  const matriculeTrim = matricule.trim();
+  const passwordTrim = password.trim();
   try {
     // Cryptage SHA1 du mot de passe
-    const hash = crypto.createHash('sha1').update(password).digest('hex');
-    const etudiant = await Etudiant.findOne({ matricule, secure: hash })
+    const hash = crypto.createHash('sha1').update(passwordTrim).digest('hex');
+    const etudiant = await Etudiant.findOne({ matricule: matriculeTrim, secure: hash })
                       .populate('semestres.anneeId')
                       .populate({
                         path: 'semestres.semestreId',
@@ -111,7 +114,7 @@ exports.loginEtudiant = async (req, res) => {
                       });
     console.log("Etudiant : ", etudiant);
 
-    if (!etudiant.toObject()) {
+    if (!etudiant) {
       return res.status(401).json({ error: 'Identifiants invalides.' });
     }
     // Génération du token
