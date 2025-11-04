@@ -98,6 +98,9 @@ exports.loginEtudiant = async (req, res) => {
 
   const matriculeTrim = matricule.trim();
   const passwordTrim = password.trim();
+
+  console.log("Matricule : ", matriculeTrim);
+  console.log("Password : ", passwordTrim);
   try {
     // Cryptage SHA1 du mot de passe
     const hash = crypto.createHash('sha1').update(passwordTrim).digest('hex');
