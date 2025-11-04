@@ -14,7 +14,7 @@ const Etudiant = require('../models/Etudiant');
 const Parcour = require('../models/Parcour');
 const Annee = require('../models/Annee');
 const Recours = require('../models/Recours');
-require('dotenv');
+require('dotenv').config();
 
 const auth = require('../middleware/auth');
 const etudiantController = require('../controllers/etudiantController');
@@ -528,18 +528,22 @@ router.put('/recours/:id', async (req, res) => {
   }
 });
 
-router.post('/subscribe', async (req, res) => {
+router.post('/parcours', async (req, res) => {
   try {
     const {
       matricule,
       classeId,
       anneeId,
-      falcute
+      faculte
     } = req.body;
 
-    const falcuteId = faculte == 'HE' ? process.env.HE_ID : (falcute == 'BTP' ? process.env.BTP_ID : process.env.GR_ID);
+    const faculteId = faculte == 'HE' ? process.env.HE_ID : (faculte == 'BTP' ? process.env.BTP_ID : process.env.GR_ID);
+    console.log("Faculte ID :", faculteId);
 
-    if(!falcuteId){
+    const etabId = process.env.ETAB_TOKEN;
+    console.log('Etab ID: ', etabId);
+
+    if(!faculteId){
       return res.status(404).json({
         success: false,
         message: "FaculteId not found"
@@ -558,8 +562,8 @@ router.post('/subscribe', async (req, res) => {
       etudiant: etudiant._id,
       classe: classeId,
       annee: anneeId,
-      faculteId: falcuteId,
-      etabId : process.env.ETAB_TOKEN
+      faculteId: faculteId,
+      etabId : etabId
     });
     await parcours.save();
     
@@ -573,15 +577,16 @@ router.post('/subscribe', async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error when subscribe student to classe : ", error)
     res.status(500).json({
         success: false,
         message: "Parcours retrieval failed",
-        error: err.message
+        error: error.message
     });
   }
 })
 
-router.post('/parcours', async (req, res) => {
+router.post('/subscribe', async (req, res) => {
   try {
     const {
       matricule,
@@ -625,15 +630,15 @@ router.post('/parcours', async (req, res) => {
 
 router.get('/parcours/classe/:id/annee/:anneeId', async (req, res) => {  
   try {
-    console.log("Current classeId: ", req.params.id);
+    // console.log("Current classeId: ", req.params.id);
 
     const parcours = await Parcour.find({ annee: req.params.anneeId})
       .populate('etudiant classe annee')
       .lean();
-    console.log("Data Parcours : ", parcours);
+    // console.log("Data Parcours : ", parcours);
     const filterParcours = [];
     parcours.map(p => {
-      console.log("Current parcours : ", p);
+      // console.log("Current parcours : ", p);
       
       if (p.classe.toString() == req.params.id.toString()){
         filterParcours.push(p);
