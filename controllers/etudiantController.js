@@ -111,7 +111,13 @@ exports.loginEtudiant = async (req, res) => {
                         populate: {
                           path: 'unites',
                           populate: {
-                            path: 'cours'
+                            path: 'cours',
+                            populate: {
+                              path: 'travaux',
+                              populate: {
+                                path: 'anneeId'
+                              }
+                            }
                           }
                         }
                       });
