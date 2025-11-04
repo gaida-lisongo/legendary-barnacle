@@ -3,7 +3,7 @@ const Fiche = require('../models/Fiche');
 const Commande = require('../models/Commande');
 const Semestre = require('../models/Semestre');
 const Unite = require('../models/Unite');
-const Cours = require('../models/Cours');
+const { Cours, Travail } = require('../models/Cours');
 const Produit = require('../models/Produit');
 
 const crypto = require('crypto');
@@ -169,10 +169,11 @@ exports.loginEtudiant = async (req, res) => {
 
                 for (const coursId of unite.cours) {
                   
-                  const ecue = await Cours.findById(coursId).populate('travaux.produitId');
+                  const ecue = await Cours.findById(coursId).populate('travaux');
                   
                   const isExist = fichesStudent.find((fiche) => fiche?.chargeId && fiche.chargeId.coursId.toString() === coursId.toString());
                   coursData.push({ ...ecue.toObject(), fiche_cotation: isExist ? isExist : null });
+
                 }
 
                 unitesData.push({ ...unite.toObject(), cours: coursData });
@@ -188,6 +189,7 @@ exports.loginEtudiant = async (req, res) => {
 
     res.json({success: true, message: "Login successful", data:{ token, etudiant, mySemestres, myRecherches, myStages, myValidations, myReleves, mySessions }});
   } catch (err) {
+    console.log("err :", err);
     res.status(500).json({success: false, message: "Login failed", error: err.message });
   }
 };

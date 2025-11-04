@@ -9,6 +9,7 @@ const chargeController = require('../controllers/chargeController');
 const ficheController = require('../controllers/ficheController');
 const Rapport = require('../models/Rapport');
 const Cycle = require('../models/Cycle');
+const { Cours, Travail } = require('../models/Cours');
 
 // Cours routes
 router.get('/cours', coursController.getCoursList);
@@ -98,4 +99,24 @@ router.put('/cycle/classe/:id', async (req, res) => {
 });
 router.delete('/cycle/:id', cycleController.deleteCycle);
 
+router.post('/travail', async (req, res) => {
+    try {
+        const { coursId, anneeId, questionnaire, produitId } = req.body;
+        const newTravail = await Cours.createTravail(coursId, anneeId, questionnaire, produitId);
+
+        res.status(201).json({
+            success: true,
+            message: 'New travail creating successfully',
+            data: newTravail
+        })
+        
+    } catch (error) {
+        console.error('Error when creating travail : ', error);
+        
+        res.status(400).json({ 
+            success: false,
+            error: error.message 
+        });
+    }
+})
 module.exports = router;

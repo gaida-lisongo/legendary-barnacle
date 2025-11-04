@@ -14,6 +14,7 @@ const Etudiant = require('../models/Etudiant');
 const Parcour = require('../models/Parcour');
 const Annee = require('../models/Annee');
 const Recours = require('../models/Recours');
+require('dotenv');
 
 const auth = require('../middleware/auth');
 const etudiantController = require('../controllers/etudiantController');
@@ -527,6 +528,59 @@ router.put('/recours/:id', async (req, res) => {
   }
 });
 
+router.post('/subscribe', async (req, res) => {
+  try {
+    const {
+      matricule,
+      classeId,
+      anneeId,
+      falcute
+    } = req.body;
+
+    const falcuteId = faculte == 'HE' ? process.env.HE_ID : (falcute == 'BTP' ? process.env.BTP_ID : process.env.GR_ID);
+
+    if(!falcuteId){
+      return res.status(404).json({
+        success: false,
+        message: "FaculteId not found"
+      });
+    }
+    
+    const etudiant = await Etudiant.findOne({ matricule });
+    if (!etudiant) {
+      return res.status(404).json({
+        success: false,
+        message: "Etudiant not found"
+      });
+    }
+
+    const parcours = new Parcour({
+      etudiant: etudiant._id,
+      classe: classeId,
+      annee: anneeId,
+      faculteId: falcuteId,
+      etabId : process.env.ETAB_TOKEN
+    });
+    await parcours.save();
+    
+    res.status(201).json({
+        success: true,
+        message: "Parcours created successfully",
+        data: {
+          etudiant: etudiant,
+          parcours: parcours
+        }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+        success: false,
+        message: "Parcours retrieval failed",
+        error: err.message
+    });
+  }
+})
+
 router.post('/parcours', async (req, res) => {
   try {
     const {
@@ -572,14 +626,9 @@ router.post('/parcours', async (req, res) => {
 router.get('/parcours/classe/:id/annee/:anneeId', async (req, res) => {  
   try {
     console.log("Current classeId: ", req.params.id);
-    const { page } = req.query;
-    const limit = 200;
-    const skip = (parseInt(page) - 1) * limit;
 
     const parcours = await Parcour.find({ annee: req.params.anneeId})
       .populate('etudiant classe annee')
-      .skip(skip)
-      .limit(limit)
       .lean();
     console.log("Data Parcours : ", parcours);
     const filterParcours = [];

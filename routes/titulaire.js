@@ -5,7 +5,7 @@ const Cycle = require('../models/Cycle');
 const Semestre = require('../models/Semestre');
 const Unite = require('../models/Unite');
 const Charge = require('../models/Charge');
-const Cours = require('../models/Cours');
+const {Cours, Travail} = require('../models/Cours');
 const Fiche = require('../models/Fiche');
 const Jury = require('../models/Jury');
 const Recours = require('../models/Recours');
@@ -66,7 +66,12 @@ router.get('/charges/:titulaireId', async (req, res) => {
 
     // Étape 1 : Récupérer toutes les charges
     const charges = await Charge.find({ agentId: titulaireId })
-      .populate('coursId')
+      .populate({
+        path: 'coursId',
+        populate: {
+          path: 'travaux'
+        }
+      })
       .populate('anneeId');
     console.log("Charges : ", charges);
     const result = [];
@@ -81,11 +86,12 @@ router.get('/charges/:titulaireId', async (req, res) => {
 
       // Filtrer séances/travaux par année
       let seances = cours.seances?.filter(s => s.anneeId.toString() === anneeIdStr) || [];
+      console.log("Travaux : ", cours.travaux);
       let travaux = cours.travaux?.filter(t => t.anneeId.toString() === anneeIdStr) || [];
 
       // Ajouter tous les produitIds à une liste
-      seances.forEach(s => allProduitIds.add(s.produitId.toString()));
-      travaux.forEach(t => allProduitIds.add(t.produitId.toString()));
+      seances.forEach(s => allProduitIds.add(s?.produitId?.toString()));
+      travaux.forEach(t => allProduitIds.add(t?.produitId?.toString()));
 
       // Peupler produits dans seances/travaux
       seances = await Promise.all(seances.map(async (s) => {
@@ -124,9 +130,11 @@ router.get('/charges/:titulaireId', async (req, res) => {
       console.log("Produit ID : ", produitId);
       const produit = await Produit.findById(produitId);
       console.log("Produit : ", produit);
-      const commandesProduit = await Commande.find({ productIds: produitId });
-      const produitWithCommandes = { ...produit.toObject(), commandes: commandesProduit };
-      commandes.push(produitWithCommandes);
+      if (produit) {
+        const commandesProduit = await Commande.find({ productIds: produitId });
+        const produitWithCommandes = { ...produit.toObject(), commandes: commandesProduit };
+        commandes.push(produitWithCommandes);
+      }
     }
     console.log("Commandes : ", commandes);
 
