@@ -79,8 +79,71 @@ const htmlResetPassword = ({
   return message;
 }
 
+router.get('/check-account/:section/:matricule', async (req, res) => {
+  try {
+    console.log("Begin");
+    
+    const etudiant = await Etudiant.findOne({ matricule: req.params.matricule });
+    if (!etudiant) {
+      return res.status(404).json({
+        success: false,
+        message: "Etudiant not found"
+      });
+    }
+
+    const authData = usersMail.find((user) => user.section === req.params.section);
+    console.log("Auth data : ", authData);
+    if (!authData) {
+      return res.status(404).json({
+        success: false,
+        message: "Auth data not found"
+      });
+    }
+    
+    const messageHtml = htmlResetPassword({
+      nom: etudiant.nom,
+      post_nom: etudiant.post_nom,
+      prenom: etudiant.prenom,
+      matricule: req.params.matricule,
+      email: "lisongobaita@gmail.com",
+      _id: etudiant._id,
+      url: req.protocol + '://' + req.get('host'),
+      section: req.params.section
+    });
+
+    console.log("Message HTML : ", messageHtml);
+    
+    const mailer = new Mailer(authData.host, authData.port, authData.auth);
+    mailer.makeContent(messageHtml);
+    const result = await mailer.sendMail("admin@inbtp.net", 'Reset Password', authData.from);
+    
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: "Email sending failed",
+        error: result.error
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Email sent successfully",
+      data: result
+    });
+    
+  } catch (error) {
+    console.error("Error from sending email : ", error)
+    return res.status(500).json({
+      success: false,
+      message: "Email sending failed",
+      error: error.message
+    });
+  }
+})
+
 const auth = require('../middleware/auth');
 const etudiantController = require('../controllers/etudiantController');
+
+
 
 router.get('/', etudiantController.getEtudiants);
 router.get('/:id', etudiantController.getEtudiant);
@@ -812,65 +875,9 @@ router.delete('/parcours/:id', async (req, res) => {
   }
 });
 
-router.patch('/check-account/:section', async (req, res) => {
-  try {
-    const etudiant = await Etudiant.findOne({ matricule: req.body.matricule });
-    if (!etudiant) {
-      return res.status(404).json({
-        success: false,
-        message: "Etudiant not found"
-      });
-    }
-
-    const authData = usersMail.find((user) => user.section === req.params.section);
-    if (!authData) {
-      return res.status(404).json({
-        success: false,
-        message: "Auth data not found"
-      });
-    }
-    
-    const messageHtml = htmlResetPassword({
-      nom: etudiant.nom,
-      post_nom: etudiant.post_nom,
-      prenom: etudiant.prenom,
-      matricule: etudiant.matricule,
-      email: etudiant.email,
-      _id: etudiant._id,
-      url: req.protocol + '://' + req.get('host'),
-      section: req.params.section
-    });
-    
-    const mailer = new Mailer(authData.host, authData.port, authData.auth);
-    mailer.makeContent(messageHtml);
-    const result = await mailer.sendMail(etudiant.email, 'Reset Password', authData.from);
-    
-    if (!result.success) {
-      return res.status(500).json({
-        success: false,
-        message: "Email sending failed",
-        error: result.error
-      });
-    }
-    return res.status(200).json({
-      success: true,
-      message: "Email sent successfully",
-      data: result
-    });
-    
-  } catch (error) {
-    console.error("Error from sending email : ", error)
-    return res.status(500).json({
-      success: false,
-      message: "Email sending failed",
-      error: error.message
-    });
-  }
-})
-
 // Etudiant routes
 router.use(auth);
-router.post('/rapport', async (req, res) => {
+router.post('/rapport',  async (req, res) => {
   try {
     const rapport = new Rapport(req.body);
     await rapport.save();
