@@ -1,12 +1,21 @@
 const nodemailer = require('nodemailer');
 
 class Mailer {
-    constructor( host, port, secure, auth) {
+    constructor( auth) {
         this.transporter = nodemailer.createTransport({
-            host: host,
-            port: port,
-            secure: secure,
-            auth: auth
+            host: 'smtp.hostinger.com',
+            port: 465,
+            secure: true,
+            auth: auth,
+            pool: true,
+            maxConnections: 10,
+            maxIdleTime: 10000
+        }, (error, info) => {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log(info);
+            }
         });
 
         this.content = '';

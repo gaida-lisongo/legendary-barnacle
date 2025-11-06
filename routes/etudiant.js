@@ -20,9 +20,6 @@ require('dotenv').config();
 const usersMail = [
   {
     section: 'HE',
-    host: process.env.HE_HOST,
-    port: process.env.HE_PORT,
-    secure: process.env.HE_SECURE,
     auth: {
       user: process.env.HE_USER,
       pass: process.env.HE_PASS
@@ -30,9 +27,6 @@ const usersMail = [
   },
   {
     section: 'BTP',
-    host: process.env.BTP_HOST,
-    port: process.env.BTP_PORT,
-    secure: process.env.BTP_SECURE,
     auth: {
       user: process.env.BTP_USER,
       pass: process.env.BTP_PASS
@@ -40,9 +34,6 @@ const usersMail = [
   },
   {
     section: 'GR',
-    host: process.env.GR_HOST,
-    port: process.env.GR_PORT,
-    secure: process.env.GR_SECURE,
     auth: {
       user: process.env.GR_USER,
       pass: process.env.GR_PASS
@@ -850,7 +841,7 @@ router.patch('/check-account/:section', async (req, res) => {
       section: req.params.section
     });
     
-    const mailer = new Mailer(authData.host, authData.port, authData.secure, authData.auth);
+    const mailer = new Mailer(authData.host, authData.port, authData.auth);
     mailer.makeContent(messageHtml);
     const result = await mailer.sendMail(etudiant.email, 'Reset Password', authData.from);
     
