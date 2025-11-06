@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "dev": "nodemon index.js",     
-    "start": "pm2 start index.js --name server-gr" ,
+    "dev": "nodemon index.js",
+    "start": "pm2 start index.js --name server-gr",
     "restart": "pm2 restart server-gr",
     "stop": "pm2 stop server-gr",
     "logs": "pm2 logs server-gr"
@@ -12,7 +12,8 @@
     "dotenv": "^17.2.2",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.1"
+    "mongoose": "^8.18.1",
+    "nodemailer": "^7.0.10"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

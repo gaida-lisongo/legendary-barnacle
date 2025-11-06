@@ -8,6 +8,7 @@ const EtudiantSchema = new mongoose.Schema({
   nationalite: String,
   lieu_naissance: String,
   date_naissance: Date,
+  email: String,
   matricule: String,
   secure: String,
   solde: Number,

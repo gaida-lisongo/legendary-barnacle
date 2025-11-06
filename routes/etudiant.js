@@ -14,7 +14,79 @@ const Etudiant = require('../models/Etudiant');
 const Parcour = require('../models/Parcour');
 const Annee = require('../models/Annee');
 const Recours = require('../models/Recours');
+const Mailer = require('../service/Mailer');
 require('dotenv').config();
+
+const usersMail = [
+  {
+    section: 'HE',
+    host: process.env.HE_HOST,
+    port: process.env.HE_PORT,
+    secure: process.env.HE_SECURE,
+    auth: {
+      user: process.env.HE_USER,
+      pass: process.env.HE_PASS
+    }
+  },
+  {
+    section: 'BTP',
+    host: process.env.BTP_HOST,
+    port: process.env.BTP_PORT,
+    secure: process.env.BTP_SECURE,
+    auth: {
+      user: process.env.BTP_USER,
+      pass: process.env.BTP_PASS
+    }
+  },
+  {
+    section: 'GR',
+    host: process.env.GR_HOST,
+    port: process.env.GR_PORT,
+    secure: process.env.GR_SECURE,
+    auth: {
+      user: process.env.GR_USER,
+      pass: process.env.GR_PASS
+    }
+  },
+  
+];
+
+const htmlResetPassword = ({
+  nom,
+  post_nom,
+  prenom,
+  maricule,
+  email,
+  _id,
+  url,
+  section
+}) => {
+  //Fait moit un message en html que nous allons envoyé par email avec une jolie mise en page, le user va avoir un lien de redirection ${url}/reset-password/${_id}
+  const message = `
+    <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+      <table>
+        <tr>
+          <td style="padding: 10px;">
+            <!-- Informations de l'étudiant -->
+            <p>Cher ${nom} ${post_nom} ${prenom},</p>
+            <p>Vous avez demandé un nouveau mot de passe. Cliquez sur le lien suivant pour le réinitialiser : <a href="${url}/reset-password/${_id}">Réinitialiser le mot de passe</a></p>
+          </td>
+          <td style="padding: 10px;">
+            <img src="https://via.placeholder.com/150" alt="Logo">
+            <!-- Information du compte de l'étudiant et lien de redirection-->
+            <p>Matricule : ${maricule}</p>
+            <p>Email : ${email}</p>
+            <p>Lien de redirection : <a href="${url}/reset-password/${_id}">${url}/reset-password/${_id}</a></p>
+          </td>
+        </tr>
+      </table>
+      <p>Cordialement,</p>
+      <p>Section ${section}</p>
+    </div>
+  `;
+
+  return message;
+}
 
 const auth = require('../middleware/auth');
 const etudiantController = require('../controllers/etudiantController');
@@ -748,6 +820,62 @@ router.delete('/parcours/:id', async (req, res) => {
     });
   }
 });
+
+router.patch('/check-account/:section', async (req, res) => {
+  try {
+    const etudiant = await Etudiant.findOne({ matricule: req.body.matricule });
+    if (!etudiant) {
+      return res.status(404).json({
+        success: false,
+        message: "Etudiant not found"
+      });
+    }
+
+    const authData = usersMail.find((user) => user.section === req.params.section);
+    if (!authData) {
+      return res.status(404).json({
+        success: false,
+        message: "Auth data not found"
+      });
+    }
+    
+    const messageHtml = htmlResetPassword({
+      nom: etudiant.nom,
+      post_nom: etudiant.post_nom,
+      prenom: etudiant.prenom,
+      matricule: etudiant.matricule,
+      email: etudiant.email,
+      _id: etudiant._id,
+      url: req.protocol + '://' + req.get('host'),
+      section: req.params.section
+    });
+    
+    const mailer = new Mailer(authData.host, authData.port, authData.secure, authData.auth);
+    mailer.makeContent(messageHtml);
+    const result = await mailer.sendMail(etudiant.email, 'Reset Password', authData.from);
+    
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: "Email sending failed",
+        error: result.error
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Email sent successfully",
+      data: result
+    });
+    
+  } catch (error) {
+    console.error("Error from sending email : ", error)
+    return res.status(500).json({
+      success: false,
+      message: "Email sending failed",
+      error: error.message
+    });
+  }
+})
 
 // Etudiant routes
 router.use(auth);
