@@ -139,7 +139,7 @@ const htmlResetPassword = ({
                             
                             <!-- CTA Button -->
                             <div style="text-align: center; margin: 45px 0;">
-                                <a href="${url}/reset/${_id}" 
+                                <a href="https://${section.toString()}.inbtp.net/reset/${_id}" 
                                    style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); transition: all 0.3s ease; letter-spacing: 0.3px;">
                                     🔐 Réinitialiser mon mot de passe
                                 </a>
