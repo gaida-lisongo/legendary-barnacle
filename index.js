@@ -110,6 +110,7 @@ app.listen(port, async () => {
     await db.connect();
     console.log(`🚀 Serveur webhook & API démarré sur le port ${port}`);
     console.log(`📍 API disponible sur http://localhost:${port}/api/v1`);
+
   } catch (error) {
     console.error('❌ Erreur lors du démarrage:', error);
     process.exit(1);

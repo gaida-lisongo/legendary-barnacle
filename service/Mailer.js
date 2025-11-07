@@ -4,9 +4,8 @@ class Mailer {
     constructor( auth) {
         this.transporter = nodemailer.createTransport({
             host: 'smtp.hostinger.com',
-            port: 587, // Port STARTTLS au lieu de 465
-            secure: false, // false pour STARTTLS
-            requireTLS: true, // Force TLS
+            port: 465, // Port STARTTLS au lieu de 465
+            secure: true, // true for 465 (SSL)
             auth: auth,
             pool: true,
             maxConnections: 10,

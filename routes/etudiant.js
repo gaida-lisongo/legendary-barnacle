@@ -15,6 +15,7 @@ const Parcour = require('../models/Parcour');
 const Annee = require('../models/Annee');
 const Recours = require('../models/Recours');
 const Mailer = require('../service/Mailer');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const usersMail = [
@@ -46,34 +47,154 @@ const htmlResetPassword = ({
   nom,
   post_nom,
   prenom,
-  maricule,
+  matricule,
   email,
   _id,
   url,
   section
 }) => {
-  //Fait moit un message en html que nous allons envoyé par email avec une jolie mise en page, le user va avoir un lien de redirection ${url}/reset-password/${_id}
   const message = `
-    <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
-      <table>
-        <tr>
-          <td style="padding: 10px;">
-            <!-- Informations de l'étudiant -->
-            <p>Cher ${nom} ${post_nom} ${prenom},</p>
-            <p>Vous avez demandé un nouveau mot de passe. Cliquez sur le lien suivant pour le réinitialiser : <a href="${url}/reset-password/${_id}">Réinitialiser le mot de passe</a></p>
-          </td>
-          <td style="padding: 10px;">
-            <img src="https://via.placeholder.com/150" alt="Logo">
-            <!-- Information du compte de l'étudiant et lien de redirection-->
-            <p>Matricule : ${maricule}</p>
-            <p>Email : ${email}</p>
-            <p>Lien de redirection : <a href="${url}/reset-password/${_id}">${url}/reset-password/${_id}</a></p>
-          </td>
-        </tr>
-      </table>
-      <p>Cordialement,</p>
-      <p>Section ${section}</p>
-    </div>
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Réinitialisation de mot de passe</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto;">
+            <tr>
+                <td>
+                    <!-- Main Container -->
+                    <div style="background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+                        
+                        <!-- Header with Gradient -->
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 50px 30px; text-align: center; position: relative;">
+                            <!-- Decorative circles -->
+                            <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                            <div style="position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                            
+                            <!-- SVG Illustration -->
+                            <div style="margin: 0 auto 30px; position: relative; z-index: 1;">
+                                <svg width="180" height="180" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Background circle -->
+                                    <circle cx="100" cy="100" r="95" fill="white" opacity="0.95"/>
+                                    
+                                    <!-- User icon with lock -->
+                                    <circle cx="100" cy="75" r="25" fill="#667eea"/>
+                                    <path d="M100 105 C75 105, 60 115, 60 130 L60 145 C60 150, 65 155, 70 155 L130 155 C135 155, 140 150, 140 145 L140 130 C140 115, 125 105, 100 105 Z" fill="#667eea"/>
+                                    
+                                    <!-- Lock icon -->
+                                    <rect x="120" y="125" width="40" height="45" rx="5" fill="#FFC107"/>
+                                    <rect x="125" y="130" width="30" height="35" rx="3" fill="#FFD54F"/>
+                                    <path d="M135 125 L135 115 C135 107, 140 102, 145 102 C150 102, 155 107, 155 115 L155 125" stroke="#FFC107" stroke-width="4" fill="none"/>
+                                    <circle cx="140" cy="145" r="4" fill="#FFC107"/>
+                                    <rect x="138" y="145" width="4" height="8" fill="#FFC107"/>
+                                    
+                                    <!-- Sparkles -->
+                                    <circle cx="50" cy="50" r="3" fill="#FFD54F"/>
+                                    <circle cx="150" cy="60" r="2" fill="#FFD54F"/>
+                                    <circle cx="160" cy="90" r="2.5" fill="#FFD54F"/>
+                                    <circle cx="45" cy="100" r="2" fill="#FFD54F"/>
+                                </svg>
+                            </div>
+                            
+                            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.1);">Récupération de compte</h1>
+                            <p style="color: rgba(255,255,255,0.95); margin: 15px 0 0; font-size: 18px; font-weight: 500;">Section ${section}</p>
+                        </div>
+                        
+                        <!-- Content Section -->
+                        <div style="padding: 50px 40px;">
+                            <!-- Greeting -->
+                            <div style="text-align: center; margin-bottom: 40px;">
+                                <h2 style="color: #1a202c; margin: 0 0 15px; font-size: 26px; font-weight: 700;">Bonjour ${prenom} ${nom} 👋</h2>
+                                <p style="color: #4a5568; margin: 0; font-size: 17px; line-height: 1.6;">Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte étudiant.</p>
+                            </div>
+                            
+                            <!-- Student Info Card -->
+                            <div style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); border-radius: 16px; padding: 30px; margin: 35px 0; border: 2px solid #e2e8f0; position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(102, 126, 234, 0.05); border-radius: 50%;"></div>
+                                
+                                <div style="display: flex; align-items: center; margin-bottom: 20px; position: relative; z-index: 1;">
+                                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <h3 style="color: #2d3748; margin: 0; font-size: 20px; font-weight: 700;">Informations du compte</h3>
+                                </div>
+                                
+                                <div style="position: relative; z-index: 1;">
+                                    <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 10px; border-left: 4px solid #667eea;">
+                                        <p style="margin: 0; color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Matricule</p>
+                                        <p style="margin: 8px 0 0; color: #2d3748; font-size: 18px; font-weight: 700;">${matricule}</p>
+                                    </div>
+                                    <div style="padding: 15px; background: white; border-radius: 10px; border-left: 4px solid #764ba2;">
+                                        <p style="margin: 0; color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</p>
+                                        <p style="margin: 8px 0 0; color: #2d3748; font-size: 16px; font-weight: 600;">${email}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- CTA Button -->
+                            <div style="text-align: center; margin: 45px 0;">
+                                <a href="${url}/reset/${_id}" 
+                                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); transition: all 0.3s ease; letter-spacing: 0.3px;">
+                                    🔐 Réinitialiser mon mot de passe
+                                </a>
+                                <p style="color: #a0aec0; margin: 20px 0 0; font-size: 14px;">Ce lien est valide pendant 24 heures</p>
+                            </div>
+                            
+                            <!-- Security Notice -->
+                            <div style="background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); border-radius: 12px; padding: 25px; margin: 35px 0; border-left: 5px solid #fc8181; position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: -10px; right: -10px; width: 80px; height: 80px; background: rgba(252, 129, 129, 0.1); border-radius: 50%;"></div>
+                                
+                                <div style="display: flex; align-items: flex-start; position: relative; z-index: 1;">
+                                    <div style="flex-shrink: 0; width: 40px; height: 40px; background: #fc8181; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                                        <span style="font-size: 24px;">⚠️</span>
+                                    </div>
+                                    <div>
+                                        <h4 style="color: #c53030; margin: 0 0 10px; font-size: 18px; font-weight: 700;">Note de sécurité</h4>
+                                        <p style="color: #742a2a; margin: 0; font-size: 15px; line-height: 1.6;">
+                                            Si vous n'avez pas demandé cette réinitialisation, <strong>ignorez cet email</strong>. Votre compte reste sécurisé et aucune action n'est requise de votre part.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Divider -->
+                            <div style="height: 1px; background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%); margin: 40px 0;"></div>
+                            
+                            <!-- Footer Message -->
+                            <div style="text-align: center;">
+                                <p style="color: #718096; margin: 0 0 10px; font-size: 15px;">Cordialement,</p>
+                                <p style="color: #2d3748; margin: 0; font-size: 18px; font-weight: 700;">L'équipe de la Section ${section}</p>
+                                <div style="margin-top: 25px;">
+                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.3;">
+                                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#667eea" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M2 17L12 22L22 17" stroke="#667eea" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M2 12L12 17L22 12" stroke="#667eea" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); padding: 30px; text-align: center;">
+                            <p style="color: #cbd5e0; margin: 0 0 8px; font-size: 13px; line-height: 1.6;">
+                                📧 Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+                            </p>
+                            <p style="color: #718096; margin: 0; font-size: 12px;">
+                                © ${new Date().getFullYear()} Section ${section} - Tous droits réservés
+                            </p>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
   `;
 
   return message;
@@ -104,18 +225,22 @@ router.get('/check-account/:section/:matricule', async (req, res) => {
       nom: etudiant.nom,
       post_nom: etudiant.post_nom,
       prenom: etudiant.prenom,
-      matricule: req.params.matricule,
+      matricule: etudiant.matricule,
       email: "lisongobaita@gmail.com",
       _id: etudiant._id,
-      url: req.protocol + '://' + req.get('host'),
+      url: process.env.CLIENT_URL || 'http://localhost:3000',
       section: req.params.section
     });
 
     console.log("Message HTML : ", messageHtml);
     
-    const mailer = new Mailer(authData.host, authData.port, authData.auth);
+    const mailer = new Mailer(authData.auth);
     mailer.makeContent(messageHtml);
-    const result = await mailer.sendMail("admin@inbtp.net", 'Reset Password', authData.from);
+    const result = await mailer.sendMail(
+      etudiant.email ?? 'lisongobaita@gmail.com',
+      'Récupération de compte',
+      authData.auth.user
+    );
     
     if (!result.success) {
       return res.status(500).json({
@@ -138,17 +263,70 @@ router.get('/check-account/:section/:matricule', async (req, res) => {
       error: error.message
     });
   }
-})
+});
+
+router.get('/id/:_id', async (req, res) => {
+  try {
+    const etudiant = await Etudiant.findById(req.params._id);
+    if (!etudiant) {
+      return res.status(404).json({
+        success: false,
+        message: "Etudiant not found"
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Etudiant found successfully",
+      data: etudiant
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Etudiant not found",
+      error: error.message
+    });
+  }
+});
+
+router.put('/secure', async (req, res) => {
+  try {
+    const { secure, etudiantId } = req.body;
+    const etudiant = await Etudiant.findById(etudiantId);
+    if (!etudiant) {
+      return res.status(404).json({
+        success: false,
+        message: "Etudiant not found"
+      });
+    }
+    const hash = crypto.createHash('sha1').update(secure.trim()).digest('hex');
+    etudiant.secure = hash;
+
+    console.log("Password hashed : ", hash);
+
+    await etudiant.save();
+    return res.status(200).json({
+      success: true,
+      message: "Etudiant updated successfully",
+      data: etudiant
+    });
+    
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Etudiant update failed",
+      error: error.message
+    });
+  }
+});
 
 const auth = require('../middleware/auth');
 const etudiantController = require('../controllers/etudiantController');
-
-
 
 router.get('/', etudiantController.getEtudiants);
 router.get('/:id', etudiantController.getEtudiant);
 router.post('/', etudiantController.createEtudiant);
 router.post('/login', etudiantController.loginEtudiant);
+router.post('/connected', etudiantController.login);
 router.get('/resultats/:matricule', etudiantController.getResultats);
 router.get('/checking-1/:matricule', async (req, res) => {
   try {

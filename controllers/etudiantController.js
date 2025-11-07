@@ -10,6 +10,151 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const MoneyManager = require('../service/MoneyManager');
 
+const userLogin = async ({matricule, hash}) => {
+  try {
+    const etudiant = await Etudiant.findOne({ matricule, secure: hash })
+                      .populate('semestres.anneeId')
+                      .populate({
+                        path: 'semestres.semestreId',
+                        populate: {
+                          path: 'unites',
+                          populate: {
+                            path: 'cours',
+                            populate: {
+                              path: 'travaux',
+                              populate: {
+                                path: 'anneeId'
+                              }
+                            }
+                          }
+                        }
+                      });
+    console.log("Etudiant : ", etudiant);
+
+    if (!etudiant) {
+      return { error: 'Identifiants invalides.' };
+    }
+    // Génération du token
+    const token = jwt.sign({ id: etudiant._id, matricule: etudiant.matricule }, 'SECRET_KEY', { expiresIn: '1d' });
+    const fichesStudent = await Fiche.find({
+      etudiantId: etudiant?._id
+    })
+      .populate('chargeId');
+
+    const commandesData = await Commande.find({ matricule });
+
+    let mySemestres = [];
+    let myRecherches = [];
+    let myStages = [];
+    let myValidations = [];
+    let myReleves = [];
+    let mySessions = [];
+    mySemestres = etudiant.semestres.map((data) => {
+      const { anneeId: annee, semestreId: semestre } = data;
+      
+      // Traitement des unités du semestre
+      const unitesData = semestre.unites.map((unite) => {
+        // Traitement des cours de l'unité
+        const coursData = unite.cours.map((cours) => {
+          // Rechercher la fiche de cotation pour ce cours
+          const isExist = fichesStudent.find((fiche) => 
+            fiche?.chargeId && fiche.chargeId.coursId.toString() === cours._id.toString()
+          );
+          
+          return {
+            ...cours.toObject(),
+            fiche_cotation: isExist ? isExist : null
+          };
+        });
+        
+        return {
+          ...unite.toObject(),
+          cours: coursData
+        };
+      });
+      
+      return {
+        ...semestre.toObject(),
+        annee: annee,
+        unites: unitesData
+      };
+    });
+
+    if (commandesData.length === 0) {
+      return {
+        success: true,
+        message: "Login successful",
+        data: { token, etudiant, mySemestres, myRecherches, myStages, myValidations, myReleves, mySessions }
+      };
+    }
+
+    // Récupération de tous les productIds de toutes les commandes
+    const allProductIds = commandesData.flatMap(commande => commande.productIds);
+    const allProduitsData = await Produit.find({ _id: { $in: allProductIds } }).populate('sectionId anneeId');
+    
+    // Traitement séquentiel des commandes
+    for (const commande of commandesData) {
+      const produitsData = allProduitsData.filter(produit => 
+        commande.productIds.some(id => id.toString() === produit._id.toString())
+      );
+      
+      // Traitement des produits
+      for (const produit of produitsData) {
+        if (produit.categorie.includes('sujet')) {
+          myRecherches.push({...produit.toObject(), status: commande.status});
+        } else if (produit.categorie.includes('stage')) {
+          myStages.push({...produit.toObject(), status: commande.status});
+        } else if (produit.categorie.includes('validation')) {
+          myValidations.push({...produit.toObject(), status: commande.status});
+        } else if (produit.categorie.includes('releve')) {
+          myReleves.push({...produit.toObject(), status: commande.status});
+        } else if (produit.categorie.includes('session')) {
+          mySessions.push({...produit.toObject(), status: commande.status});
+        }
+      }
+      
+      // Traitement des semestres
+      // for (const productId of commande.productIds) {
+
+      //   for (const semestre of allSemestres) {
+      //     if (semestre.insription.find((insription) => insription.produitId.toString() === productId.toString())) {
+      //       let unitesData = [];
+            
+      //       // Traitement des unités
+      //       for (const uniteId of semestre.unites) {
+      //         const unite = await Unite.findById(uniteId);
+      //         let coursData = [];
+      //         // Traitement des cours
+      //         if(unite && unite?.cours.length){
+
+      //           for (const coursId of unite.cours) {
+                  
+      //             const ecue = await Cours.findById(coursId).populate('travaux');
+                  
+      //             const isExist = fichesStudent.find((fiche) => fiche?.chargeId && fiche.chargeId.coursId.toString() === coursId.toString());
+      //             coursData.push({ ...ecue.toObject(), fiche_cotation: isExist ? isExist : null });
+
+      //           }
+
+      //           unitesData.push({ ...unite.toObject(), cours: coursData });
+      //         }
+              
+      //       }
+            
+      //       mySemestres.push({ ...semestre.toObject(), unites: unitesData });
+      //     }
+      //   }
+      // }
+    }
+
+    return {success: true, message: "Login successful", data:{ token, etudiant, mySemestres, myRecherches, myStages, myValidations, myReleves, mySessions }};
+  } catch (err) {
+    console.log("err :", err);
+    return {success: false, message: "Login failed", error: err.message };
+  }
+
+}
+
 exports.createEtudiant = async (req, res) => {
   try {
     const etudiant = new Etudiant(req.body);
@@ -90,6 +235,23 @@ exports.deleteEtudiant = async (req, res) => {
   }
 };
 
+exports.login = async (req, res) => {
+  const { matricule, password } = req.body;
+  if (!matricule || !password) {
+    return res.status(400).json({ error: 'Matricule et mot de passe requis.' });
+  }
+
+  const matriculeTrim = matricule.trim();
+  const hash = password.trim();
+
+  userLogin({
+    matricule: matriculeTrim,
+    hash
+  })
+    .then(data => res.json(data))
+    .catch(err => res.status(500).json(err))
+}
+
 // Authentification de l'agent
 exports.loginEtudiant = async (req, res) => {
   const { matricule, password } = req.body;
@@ -100,153 +262,15 @@ exports.loginEtudiant = async (req, res) => {
   const matriculeTrim = matricule.trim();
   const passwordTrim = password.trim();
 
-  console.log("Matricule : ", matriculeTrim);
-  console.log("Password : ", passwordTrim);
-  try {
-    // Cryptage SHA1 du mot de passe
-    const hash = crypto.createHash('sha1').update(passwordTrim).digest('hex');
-    const etudiant = await Etudiant.findOne({ matricule: matriculeTrim, secure: hash })
-                      .populate('semestres.anneeId')
-                      .populate({
-                        path: 'semestres.semestreId',
-                        populate: {
-                          path: 'unites',
-                          populate: {
-                            path: 'cours',
-                            populate: {
-                              path: 'travaux',
-                              populate: {
-                                path: 'anneeId'
-                              }
-                            }
-                          }
-                        }
-                      });
-    console.log("Etudiant : ", etudiant);
+  // Cryptage SHA1 du mot de passe
+  const hash = crypto.createHash('sha1').update(passwordTrim).digest('hex');
 
-    if (!etudiant) {
-      return res.status(401).json({ error: 'Identifiants invalides.' });
-    }
-    // Génération du token
-    const token = jwt.sign({ id: etudiant._id, matricule: etudiant.matricule }, 'SECRET_KEY', { expiresIn: '1d' });
-    const fichesStudent = await Fiche.find({
-      etudiantId: etudiant?._id
-    })
-      .populate('chargeId');
-
-    const commandesData = await Commande.find({ matricule });
-
-    let mySemestres = [];
-    let myRecherches = [];
-    let myStages = [];
-    let myValidations = [];
-    let myReleves = [];
-    let mySessions = [];
-    mySemestres = etudiant.semestres.map((data) => {
-      const { anneeId: annee, semestreId: semestre } = data;
-      
-      // Traitement des unités du semestre
-      const unitesData = semestre.unites.map((unite) => {
-        // Traitement des cours de l'unité
-        const coursData = unite.cours.map((cours) => {
-          // Rechercher la fiche de cotation pour ce cours
-          const isExist = fichesStudent.find((fiche) => 
-            fiche?.chargeId && fiche.chargeId.coursId.toString() === cours._id.toString()
-          );
-          
-          return {
-            ...cours.toObject(),
-            fiche_cotation: isExist ? isExist : null
-          };
-        });
-        
-        return {
-          ...unite.toObject(),
-          cours: coursData
-        };
-      });
-      
-      return {
-        ...semestre.toObject(),
-        annee: annee,
-        unites: unitesData
-      };
-    });
-
-    if (commandesData.length === 0) {
-      return res.status(200).json(
-        {
-          success: true,
-          message: "Login successful",
-          data: { token, etudiant, mySemestres, myRecherches, myStages, myValidations, myReleves, mySessions }
-        }
-      );
-    }
-
-    // Récupération de tous les productIds de toutes les commandes
-    const allProductIds = commandesData.flatMap(commande => commande.productIds);
-    const allProduitsData = await Produit.find({ _id: { $in: allProductIds } }).populate('sectionId anneeId');
-    
-    // Traitement séquentiel des commandes
-    for (const commande of commandesData) {
-      const produitsData = allProduitsData.filter(produit => 
-        commande.productIds.some(id => id.toString() === produit._id.toString())
-      );
-      
-      // Traitement des produits
-      for (const produit of produitsData) {
-        if (produit.categorie.includes('sujet')) {
-          myRecherches.push({...produit.toObject(), status: commande.status});
-        } else if (produit.categorie.includes('stage')) {
-          myStages.push({...produit.toObject(), status: commande.status});
-        } else if (produit.categorie.includes('validation')) {
-          myValidations.push({...produit.toObject(), status: commande.status});
-        } else if (produit.categorie.includes('releve')) {
-          myReleves.push({...produit.toObject(), status: commande.status});
-        } else if (produit.categorie.includes('session')) {
-          mySessions.push({...produit.toObject(), status: commande.status});
-        }
-      }
-      
-      // Traitement des semestres
-      // for (const productId of commande.productIds) {
-
-      //   for (const semestre of allSemestres) {
-      //     if (semestre.insription.find((insription) => insription.produitId.toString() === productId.toString())) {
-      //       let unitesData = [];
-            
-      //       // Traitement des unités
-      //       for (const uniteId of semestre.unites) {
-      //         const unite = await Unite.findById(uniteId);
-      //         let coursData = [];
-      //         // Traitement des cours
-      //         if(unite && unite?.cours.length){
-
-      //           for (const coursId of unite.cours) {
-                  
-      //             const ecue = await Cours.findById(coursId).populate('travaux');
-                  
-      //             const isExist = fichesStudent.find((fiche) => fiche?.chargeId && fiche.chargeId.coursId.toString() === coursId.toString());
-      //             coursData.push({ ...ecue.toObject(), fiche_cotation: isExist ? isExist : null });
-
-      //           }
-
-      //           unitesData.push({ ...unite.toObject(), cours: coursData });
-      //         }
-              
-      //       }
-            
-      //       mySemestres.push({ ...semestre.toObject(), unites: unitesData });
-      //     }
-      //   }
-      // }
-    }
-
-    res.json({success: true, message: "Login successful", data:{ token, etudiant, mySemestres, myRecherches, myStages, myValidations, myReleves, mySessions }});
-  } catch (err) {
-    console.log("err :", err);
-    res.status(500).json({success: false, message: "Login failed", error: err.message });
-  }
+  userLogin({
+    matricule: matriculeTrim,
+    hash
+  })
+    .then(data => res.json(data))
+    .catch(err => res.status(500).json(err))
 };
 
 exports.isCommanded = async (req, res) => {
