@@ -134,6 +134,11 @@ class FileManager {
     const filePath = path.join(this.uploadDir, filename);
     return fs.existsSync(filePath);
   }
+
+  getFile(filename) {
+    const filePath = path.join(this.uploadDir, filename);
+    return fs.readFileSync(filePath);
+  }
 }
 
 module.exports = new FileManager();

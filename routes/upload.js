@@ -10,7 +10,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // Limite de 10MB
+    fileSize: 100 * 1024 * 1024, // Limite de 100MB
   },
   fileFilter: (req, file, cb) => {
     // Vous pouvez ajouter des filtres de type de fichier ici si nécessaire
@@ -36,5 +36,7 @@ router.post('/multiple', upload.array('files', 10), uploadController.uploadMulti
  * Suppression d'un fichier
  */
 router.delete('/:filename', uploadController.deleteFile);
+
+router.get('/:filename', uploadController.getFile);
 
 module.exports = router;

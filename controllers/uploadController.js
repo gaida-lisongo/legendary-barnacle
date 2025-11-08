@@ -94,3 +94,39 @@ exports.deleteFile = async (req, res) => {
     });
   }
 };
+
+exports.getFile = async (req, res) => {
+    try {
+        const { filename } = req.params;
+
+        if (!filename) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nom de fichier requis'
+            });
+        }
+
+        const file = fileManager.getFile(filename);
+
+        if (!file) {
+            return res.status(404).json({
+                success: false,
+                message: 'Fichier non trouvé'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Fichier récupéré avec succès',
+            data: file
+        });
+        
+    } catch (error) {
+        console.error('❌ Erreur récupération fichier:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de la récupération du fichier',
+            error: error.message
+        });
+    }
+}

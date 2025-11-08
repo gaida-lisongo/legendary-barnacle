@@ -17,6 +17,7 @@ const paymentRoutes = require('./payment');
 const titulaireRoutes = require('./titulaire');
 const recoursRoutes = require('./recours');
 const resolutionRoutes = require('./resolution');
+const uploadRoutes = require('./upload');
 
 // Utiliser les routes de section sous le path /section
 router.use('/section', sectionRoutes);
@@ -34,6 +35,6 @@ router.use('/payment', paymentRoutes);
 router.use('/titulaire', titulaireRoutes);
 router.use('/recours', recoursRoutes);
 router.use('/resolution', resolutionRoutes);
-
+router.use('/uploads', uploadRoutes);
 
 module.exports = router;
