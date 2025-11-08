@@ -277,8 +277,6 @@ exports.isCommanded = async (req, res) => {
   try {
     const { produitId, matricule } = req.params;
     const commandesData = await Commande.find({ matricule }).lean();
-    console.log("commandesData :", commandesData);
-    console.log("produitId :", produitId);
     
     // Parcourir toutes les commandes et vérifier dans chaque productIds
     let isCommanded = false 
@@ -287,10 +285,12 @@ exports.isCommanded = async (req, res) => {
     for(const commande of commandesData){
       commande.productIds.some(id => id.toString() === produitId.toString())
       const paymentInfo = await MoneyManager.checkTransaction({orderNumber: commande.reference})
-      console.log("paymentInfo :", paymentInfo);
+      
       if(paymentInfo){
         const { message: infoPayment, status, transaction } = paymentInfo;
-        if(transaction.status == 0){
+        console.log("Transaction : ", transaction);
+
+        if(transaction.status == "0"){
           isCommanded = true;
           message = infoPayment;
 
