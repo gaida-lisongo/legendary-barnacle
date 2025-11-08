@@ -290,7 +290,7 @@ exports.isCommanded = async (req, res) => {
       console.log("paymentInfo :", paymentInfo);
       if(paymentInfo){
         const { message: infoPayment, status, transaction } = paymentInfo;
-        if(status == 0){
+        if(transaction.status == 0){
           isCommanded = true;
           message = infoPayment;
 

@@ -197,7 +197,7 @@ router.get('/juries/:agentId', async (req, res) => {
                 const uniteComplete = await Unite.findById(unite._id)
                   .populate('cours')
                   .lean();
-                console.log("Unite : ", uniteComplete);
+                  
                 if (!uniteComplete) continue;
   
                 const coursDataArr = [];
