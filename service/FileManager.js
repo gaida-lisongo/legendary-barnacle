@@ -6,7 +6,9 @@ class FileManager {
   constructor() {
     // Dossier de stockage des fichiers
     this.uploadDir = path.join(__dirname, '..', 'uploads');
+    this.tempDir = path.join(__dirname, '..', 'uploads', 'temp');
     this.ensureUploadDirExists();
+    this.ensureTempDirExists();
   }
 
   /**
@@ -16,6 +18,16 @@ class FileManager {
     if (!fs.existsSync(this.uploadDir)) {
       fs.mkdirSync(this.uploadDir, { recursive: true });
       console.log('📁 Dossier uploads créé:', this.uploadDir);
+    }
+  }
+
+  /**
+   * S'assure que le dossier temp existe
+   */
+  ensureTempDirExists() {
+    if (!fs.existsSync(this.tempDir)) {
+      fs.mkdirSync(this.tempDir, { recursive: true });
+      console.log('📁 Dossier temp créé:', this.tempDir);
     }
   }
 
@@ -138,6 +150,167 @@ class FileManager {
   getFile(filename) {
     const filePath = path.join(this.uploadDir, filename);
     return fs.readFileSync(filePath);
+  }
+
+  /**
+   * Sauvegarde un chunk de fichier
+   * @param {Object} chunk - Buffer du chunk
+   * @param {string} uploadId - ID unique de l'upload
+   * @param {number} chunkIndex - Index du chunk
+   * @param {string} fileName - Nom original du fichier
+   * @returns {Object} - Info sur le chunk sauvegardé
+   */
+  saveChunk(chunk, uploadId, chunkIndex, fileName) {
+    try {
+      // Créer un dossier pour cet upload
+      const uploadTempDir = path.join(this.tempDir, uploadId);
+      if (!fs.existsSync(uploadTempDir)) {
+        fs.mkdirSync(uploadTempDir, { recursive: true });
+      }
+
+      // Sauvegarder le chunk
+      const chunkPath = path.join(uploadTempDir, `chunk_${chunkIndex}`);
+      fs.writeFileSync(chunkPath, chunk);
+
+      // Sauvegarder les métadonnées si c'est le premier chunk
+      if (chunkIndex === 0) {
+        const metadataPath = path.join(uploadTempDir, 'metadata.json');
+        fs.writeFileSync(metadataPath, JSON.stringify({
+          fileName,
+          uploadId,
+          startTime: Date.now()
+        }));
+      }
+
+      console.log(`✅ Chunk ${chunkIndex} sauvegardé pour upload ${uploadId}`);
+      return {
+        success: true,
+        chunkIndex,
+        uploadId
+      };
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde du chunk:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Assemble tous les chunks en un fichier final
+   * @param {string} uploadId - ID unique de l'upload
+   * @param {number} totalChunks - Nombre total de chunks
+   * @param {string} fileName - Nom original du fichier
+   * @param {string} fileType - Type MIME du fichier
+   * @param {Object} req - Objet request Express
+   * @returns {Promise<Object>} - Info sur le fichier assemblé
+   */
+  async assembleChunks(uploadId, totalChunks, fileName, fileType, req) {
+    try {
+      const uploadTempDir = path.join(this.tempDir, uploadId);
+      
+      // Vérifier que tous les chunks sont présents
+      for (let i = 0; i < totalChunks; i++) {
+        const chunkPath = path.join(uploadTempDir, `chunk_${i}`);
+        if (!fs.existsSync(chunkPath)) {
+          throw new Error(`Chunk ${i} manquant`);
+        }
+      }
+
+      // Générer un nom de fichier unique pour le fichier final
+      const uniqueFilename = this.generateUniqueFilename(fileName);
+      const finalPath = path.join(this.uploadDir, uniqueFilename);
+
+      // Créer un stream d'écriture pour le fichier final
+      const writeStream = fs.createWriteStream(finalPath);
+
+      // Assembler les chunks
+      for (let i = 0; i < totalChunks; i++) {
+        const chunkPath = path.join(uploadTempDir, `chunk_${i}`);
+        const chunkBuffer = fs.readFileSync(chunkPath);
+        writeStream.write(chunkBuffer);
+      }
+
+      // Fermer le stream
+      writeStream.end();
+
+      // Attendre que l'écriture soit terminée
+      await new Promise((resolve, reject) => {
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+
+      // Nettoyer les chunks temporaires
+      this.cleanupTempUpload(uploadId);
+
+      // Obtenir la taille du fichier final
+      const stats = fs.statSync(finalPath);
+
+      // Construire l'URL complète
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const relativePath = `/uploads/${uniqueFilename}`;
+      const fullUrl = `${protocol}://${host}${relativePath}`;
+
+      console.log(`✅ Fichier assemblé: ${uniqueFilename} (${stats.size} bytes)`);
+
+      return {
+        success: true,
+        url: fullUrl,
+        filename: uniqueFilename,
+        originalName: fileName,
+        mimetype: fileType,
+        size: stats.size,
+        path: relativePath
+      };
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'assemblage des chunks:', error);
+      // Nettoyer en cas d'erreur
+      this.cleanupTempUpload(uploadId);
+      throw error;
+    }
+  }
+
+  /**
+   * Nettoie les fichiers temporaires d'un upload
+   * @param {string} uploadId - ID de l'upload à nettoyer
+   */
+  cleanupTempUpload(uploadId) {
+    try {
+      const uploadTempDir = path.join(this.tempDir, uploadId);
+      if (fs.existsSync(uploadTempDir)) {
+        fs.rmSync(uploadTempDir, { recursive: true, force: true });
+        console.log(`🧹 Nettoyage des fichiers temporaires pour ${uploadId}`);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors du nettoyage:', error);
+    }
+  }
+
+  /**
+   * Nettoie les uploads temporaires expirés (plus de 24h)
+   */
+  cleanupExpiredUploads() {
+    try {
+      if (!fs.existsSync(this.tempDir)) return;
+
+      const uploads = fs.readdirSync(this.tempDir);
+      const now = Date.now();
+      const expirationTime = 24 * 60 * 60 * 1000; // 24 heures
+
+      uploads.forEach(uploadId => {
+        const uploadDir = path.join(this.tempDir, uploadId);
+        const metadataPath = path.join(uploadDir, 'metadata.json');
+        
+        if (fs.existsSync(metadataPath)) {
+          const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+          if (now - metadata.startTime > expirationTime) {
+            this.cleanupTempUpload(uploadId);
+            console.log(`🧹 Upload expiré nettoyé: ${uploadId}`);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erreur lors du nettoyage des uploads expirés:', error);
+    }
   }
 }
 

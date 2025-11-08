@@ -32,6 +32,12 @@ router.post('/', upload.single('file'), uploadController.uploadSingle);
 router.post('/multiple', upload.array('files', 10), uploadController.uploadMultiple);
 
 /**
+ * POST /api/v1/upload/chunk
+ * Upload d'un chunk de fichier (pour gros fichiers)
+ */
+router.post('/chunk', upload.single('chunk'), uploadController.uploadChunk);
+
+/**
  * DELETE /api/v1/upload/:filename
  * Suppression d'un fichier
  */

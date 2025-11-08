@@ -13,6 +13,9 @@ const db = require('./service/Database');
 // Importer les routes
 const routes = require('./routes/index');
 
+// Importer le gestionnaire de fichiers
+const fileManager = require('./service/FileManager');
+
 // Configuration CORS
 const corsOptions = {
   origin: '*',
@@ -113,6 +116,14 @@ app.listen(port, async () => {
     await db.connect();
     console.log(`🚀 Serveur webhook & API démarré sur le port ${port}`);
     console.log(`📍 API disponible sur http://localhost:${port}/api/v1`);
+
+    // Nettoyer les uploads expirés au démarrage
+    fileManager.cleanupExpiredUploads();
+
+    // Nettoyer les uploads expirés toutes les heures
+    setInterval(() => {
+      fileManager.cleanupExpiredUploads();
+    }, 60 * 60 * 1000); // 1 heure
 
   } catch (error) {
     console.error('❌ Erreur lors du démarrage:', error);

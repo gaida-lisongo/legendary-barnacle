@@ -129,4 +129,70 @@ exports.getFile = async (req, res) => {
             error: error.message
         });
     }
-}
+};
+
+/**
+ * Upload d'un chunk de fichier
+ */
+exports.uploadChunk = async (req, res) => {
+  try {
+    const { uploadId, chunkIndex, totalChunks, fileName, fileType } = req.body;
+    const chunk = req.file;
+
+    if (!chunk) {
+      return res.status(400).json({
+        success: false,
+        message: 'Aucun chunk fourni'
+      });
+    }
+
+    if (!uploadId || chunkIndex === undefined || !totalChunks || !fileName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Paramètres manquants (uploadId, chunkIndex, totalChunks, fileName)'
+      });
+    }
+
+    const chunkIndexNum = parseInt(chunkIndex);
+    const totalChunksNum = parseInt(totalChunks);
+
+    // Sauvegarder le chunk
+    fileManager.saveChunk(chunk.buffer, uploadId, chunkIndexNum, fileName);
+
+    console.log(`📦 Chunk ${chunkIndexNum + 1}/${totalChunksNum} reçu pour ${fileName}`);
+
+    // Si c'est le dernier chunk, assembler le fichier
+    if (chunkIndexNum === totalChunksNum - 1) {
+      console.log('🔨 Assemblage du fichier...');
+      const result = await fileManager.assembleChunks(
+        uploadId,
+        totalChunksNum,
+        fileName,
+        fileType || 'application/octet-stream',
+        req
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: 'Fichier uploadé et assemblé avec succès',
+        data: result,
+        completed: true
+      });
+    }
+
+    // Sinon, confirmer la réception du chunk
+    res.json({
+      success: true,
+      message: `Chunk ${chunkIndexNum + 1}/${totalChunksNum} reçu`,
+      chunkIndex: chunkIndexNum,
+      completed: false
+    });
+  } catch (error) {
+    console.error('❌ Erreur upload chunk:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'upload du chunk',
+      error: error.message
+    });
+  }
+};
