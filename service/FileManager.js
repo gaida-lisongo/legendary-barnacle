@@ -75,7 +75,7 @@ class FileManager {
       const protocol = req.protocol; // http ou https
       const host = req.get('host'); // localhost:4003 ou domaine
       const relativePath = `/uploads/${uniqueFilename}`;
-      const fullUrl = `${protocol}://${host}${relativePath}`;
+      const fullUrl = `https://${host}${relativePath}`;
 
       return {
         success: true,
@@ -248,7 +248,7 @@ class FileManager {
       const protocol = req.protocol;
       const host = req.get('host');
       const relativePath = `/uploads/${uniqueFilename}`;
-      const fullUrl = `${protocol}://${host}${relativePath}`;
+      const fullUrl = `https://${host}${relativePath}`;
 
       console.log(`✅ Fichier assemblé: ${uniqueFilename} (${stats.size} bytes)`);
 
