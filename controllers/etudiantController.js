@@ -281,6 +281,8 @@ exports.isCommanded = async (req, res) => {
     // Parcourir toutes les commandes et vérifier dans chaque productIds
     let isCommanded = false 
     let message = "Le paiement n'a pas encore aboutit"
+    let commandeData = null;
+    let transactionData = null;
 
     for(const commande of commandesData){
       commande.productIds.some(id => id.toString() === produitId.toString())
@@ -293,7 +295,8 @@ exports.isCommanded = async (req, res) => {
         if(transaction.status == "0"){
           isCommanded = true;
           message = infoPayment;
-
+          commandeData = commande;
+          transactionData = transaction;
           break;
         } else {
           isCommanded = false;
@@ -302,9 +305,10 @@ exports.isCommanded = async (req, res) => {
       }
     }
     
-    console.log("isCommanded :", isCommanded);
-    res.json({success: true, message, data: isCommanded});
-    
+    res.json({success: isCommanded, message, data: {
+      commande: commandeData,
+      transaction: transactionData
+    }});
   } catch (error) {
     res.status(500).json({success: false, message: "Commande check failed", error: error.message});
   }
