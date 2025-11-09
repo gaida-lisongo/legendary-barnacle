@@ -205,11 +205,14 @@ router.post('/resolution/:commandeId', async (req, res) => {
             return res.status(404).json({ error: 'Not found' });
         }
 
+        //recupérer les 9 derniers chifre du numéro de téléphone
+        const phoneNumber = `243${telephone.slice(-9)}`;
+
         const data = await moneyManager.createTransaction({ 
           amount: 1000, 
           currency: "CDF", 
           reference: `${nom}:${matricule}`, 
-          phone: telephone 
+          phone: phoneNumber 
         });
         
         if (!data.orderNumber) {
