@@ -23,7 +23,7 @@ const userLogin = async ({matricule, hash}) => {
                             populate: {
                               path: 'travaux',
                               populate: {
-                                path: 'anneeId'
+                                path: 'anneeId produitId'
                               }
                             }
                           }

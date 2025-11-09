@@ -25,7 +25,6 @@ router.post('/:id', async (req, res) => {
         phone: telephone
       });
   
-      console.log("Response Data : ", data);
   
       if (!data.orderNumber) {
         return res.status(501).json({ error: data.message });
@@ -194,6 +193,43 @@ router.post('/recours/:etudiantId', async (req, res) => {
     console.error('Error when creating payment recours :', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+router.post('/resolution/:commandeId', async (req, res) => {
+    try {
+        const { matricule, telephone, nom, email } = req.body;
+        const { commandeId } = req.params;
+        
+        const commande = await Commande.findById(commandeId);
+        if (!commande) {
+            return res.status(404).json({ error: 'Not found' });
+        }
+
+        const data = await moneyManager.createTransaction({ 
+          amount: 1000, 
+          currency: "CDF", 
+          reference: `${nom}:${matricule}`, 
+          phone: telephone 
+        });
+        
+        if (!data.orderNumber) {
+          return res.status(501).json({ error: data.message });
+        }
+
+        commande.reference = data.orderNumber;
+        commande.status = "PENDING";
+        await commande.save();
+
+        res.json({ 
+          success: true, 
+          message: 'Commande updated successfully', 
+          data: commande.toObject()
+        });
+        
+    } catch (error) {
+        console.error('Error when creating payment resultat :', error);
+        res.status(500).json({ error: error.message });
+    }
 })
 
 router.post('/success', async (req, res) => {

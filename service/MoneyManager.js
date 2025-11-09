@@ -10,7 +10,7 @@ class MoneyManager {
 
     async createTransaction({amount, currency, reference, phone}) {
         const payload = {
-            callbackUrl: "http://localhost:4001/payment/success",
+            callbackUrl: "http://localhost:4003/payment/success",
             merchant: this.merchant,
             amount: amount,
             currency: currency,
@@ -34,6 +34,7 @@ class MoneyManager {
         try {
             const response = await fetch(this.payment, requestOptions);
             const data = await response.json();
+            console.log("Response Data : ", data);
             return data;
         } catch (error) {
             console.error('Error creating transaction:', error);
