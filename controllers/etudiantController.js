@@ -291,13 +291,14 @@ exports.isCommanded = async (req, res) => {
       if(paymentInfo){
         const { message: infoPayment, status, transaction } = paymentInfo;
         console.log("Transaction : ", transaction);
-
-        if(transaction.status == "0"){
-          isCommanded = true;
-          message = infoPayment;
-          commandeData = commande;
-          transactionData = transaction;
-          break;
+        if(transaction){
+          if(transaction.status == "0"){
+            isCommanded = true;
+            message = infoPayment;
+            commandeData = commande;
+            transactionData = transaction;
+            break;
+          } 
         } else {
           isCommanded = false;
           message = infoPayment;
